@@ -78,7 +78,7 @@ public class Room implements Closeable {
 		presenterUserSession.getWebRtcEndpoint().connect(viewerEndpoint); // Presenter와 연결
 		log.info("Viewer {} connected to presenter in room {}", viewer.getSession().getId(), name);
 		viewers.put(viewer.getSession().getId(), viewer);
-
+		log.info("현재 viewer 수: {}", viewers.size());
 		return true;
 	}
 
@@ -86,7 +86,7 @@ public class Room implements Closeable {
 		if (viewers.containsKey(sessionId)) {
 			viewers.remove(sessionId);
 			log.info("Viewer {} removed from room {}", sessionId, name);
-
+			log.info("현재 viewer 수: {}", viewers.size());
 		} else {
 			log.warn("Viewer {} not found in room {}", sessionId, name);
 		}
