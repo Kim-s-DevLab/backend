@@ -1,5 +1,6 @@
 package eightplusone.bit.fit.global.config;
 
+import eightplusone.bit.fit.domain.streamingRoom.RoomManager;
 import eightplusone.bit.fit.global.websocket.CallHandler;
 import org.kurento.client.KurentoClient;
 import org.springframework.context.annotation.Bean;
@@ -11,10 +12,13 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 @EnableWebSocket
 @Configuration
 public class AudioWebSocketConfig implements WebSocketConfigurer {
-
     @Bean
-    public CallHandler callHandler() {
-        return new CallHandler();
+    public RoomManager roomManager() {
+        return new RoomManager();
+    }
+    @Bean
+    public CallHandler callHandler(RoomManager roomManager) {
+        return new CallHandler(roomManager);
     }
 
     @Bean
@@ -24,6 +28,7 @@ public class AudioWebSocketConfig implements WebSocketConfigurer {
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(callHandler(), "/call").setAllowedOrigins("*");;
+        registry.addHandler(callHandler(roomManager()), "/call").setAllowedOrigins("*");
     }
+
 }
