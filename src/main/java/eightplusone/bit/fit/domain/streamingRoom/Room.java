@@ -64,6 +64,10 @@ public class Room implements Closeable {
 		}
 		// WebRtcEndpoint 생성 추가
 		WebRtcEndpoint viewerEndpoint = new WebRtcEndpoint.Builder(pipeline).build();
+
+		viewerEndpoint.setMaxVideoRecvBandwidth(0); // 비디오 수신 완전 차단
+		viewerEndpoint.setMaxAudioRecvBandwidth(500); // 오디오 수신 허용(고음질 음성 통화 수준)
+
 		viewer.setWebRtcEndpoint(viewerEndpoint);
 
 		if (viewer.getWebRtcEndpoint() == null) {
@@ -74,7 +78,7 @@ public class Room implements Closeable {
 		presenterUserSession.getWebRtcEndpoint().connect(viewerEndpoint); // Presenter와 연결
 		log.info("Viewer {} connected to presenter in room {}", viewer.getSession().getId(), name);
 		viewers.put(viewer.getSession().getId(), viewer);
-		
+
 		return true;
 	}
 
