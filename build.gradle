@@ -36,8 +36,11 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-	implementation 'org.springframework.boot:spring-boot-starter-websocket'
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+	// websocket
+	implementation 'org.springframework.boot:spring-boot-starter-websocket'
+	// sfu
+	implementation group: 'org.kurento', name: 'kurento-client', version: '7.1.0'
 }
 
 tasks.named('test') {
