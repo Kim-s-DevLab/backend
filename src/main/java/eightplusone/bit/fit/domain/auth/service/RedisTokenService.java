@@ -16,17 +16,17 @@ public class RedisTokenService {
 	private static final String REFRESH_PREFIX = "RT:";
 	private static final String OAUTH2_PREFIX = "AT:";
 
-	public void saveRefreshToken(String loginId, String refreshToken, long refreshTokenExpirationSeconds) {
+	public void saveRefreshToken(String email, String refreshToken, long refreshTokenExpirationSeconds) {
 		redisTemplate.opsForValue()
-			.set(REFRESH_PREFIX + loginId, refreshToken, refreshTokenExpirationSeconds, TimeUnit.SECONDS);
+			.set(REFRESH_PREFIX + email, refreshToken, refreshTokenExpirationSeconds, TimeUnit.SECONDS);
 	}
 
-	public String getRefreshToken(String loginId) {
-		return redisTemplate.opsForValue().get(REFRESH_PREFIX + loginId);
+	public String getRefreshToken(String email) {
+		return redisTemplate.opsForValue().get(REFRESH_PREFIX + email);
 	}
 
-	public Boolean deleteRefreshToken(String loginId) {
-		return redisTemplate.delete(REFRESH_PREFIX + loginId);
+	public Boolean deleteRefreshToken(String email) {
+		return redisTemplate.delete(REFRESH_PREFIX + email);
 	}
 
 	public void saveOauth2AccessToken(String provider, String oauth2AccessToken, long oauth2ValidityInMilliseconds) {

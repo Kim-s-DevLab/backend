@@ -15,8 +15,8 @@ public class CustomUserDetailsService implements UserDetailsService {
 	private final UserRepository userRepository;
 
 	@Override
-	public CustomUserDetails loadUserByUsername(String loginId) {
-		User findUser = userRepository.findLoginUserByEmail(loginId);
+	public CustomUserDetails loadUserByUsername(String email) {
+		User findUser = userRepository.findLoginUserByEmail(email);
 		if (findUser != null) {
 			return new CustomUserDetails(findUser);
 		}
