@@ -9,7 +9,7 @@ import eightplusone.bit.fit.domain.session.service.SessionService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/v1/room")
+@RequestMapping("/api/v1/enter")
 @RequiredArgsConstructor
 public class SessionController {
 
