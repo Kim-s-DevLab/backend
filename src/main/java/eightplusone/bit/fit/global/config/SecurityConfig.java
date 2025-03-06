@@ -13,8 +13,10 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 
+import eightplusone.bit.fit.domain.auth.filter.JwtAuthenticationFilter;
 import eightplusone.bit.fit.domain.auth.handler.CustomOAuth2SuccessHandler;
 import eightplusone.bit.fit.domain.auth.jwt.TokenProvider;
 import eightplusone.bit.fit.domain.auth.service.CustomOAuth2UserService;
@@ -52,6 +54,7 @@ public class SecurityConfig {
 			.authorizeHttpRequests(auth -> auth
 				.anyRequest().permitAll() // 모든 요청 허용
 			)
+			.addFilterAfter(new JwtAuthenticationFilter(tokenProvider), UsernamePasswordAuthenticationFilter.class)
 			.oauth2Login((oauth2) -> oauth2.userInfoEndpoint(
 					(userInfoEndpointConfig -> userInfoEndpointConfig.userService(customOAuth2UserService)))
 				.successHandler(new CustomOAuth2SuccessHandler(tokenProvider))
