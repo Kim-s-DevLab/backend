@@ -36,5 +36,10 @@ jobs:
       - name: Grant execute permission to gradlew
         run: chmod +x ./gradlew
 
+      - name: Start Kurento Media Server
+        run: |
+          docker run -d --name kurento-server -p 8888:8888 kurento/kurento-media-server
+          sleep 10
+
       - name: Build & Run Tests
         run: ./gradlew clean build test
