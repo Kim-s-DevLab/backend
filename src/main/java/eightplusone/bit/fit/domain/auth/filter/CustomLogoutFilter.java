@@ -51,12 +51,12 @@ public class CustomLogoutFilter extends GenericFilterBean {
 		String accessToken = tokenProvider.resolveAccessToken(request);
 		Claims claimsByAccessToken = tokenProvider.getClaimsByAccessToken(accessToken);
 
-		String id = claimsByAccessToken.getSubject();
+		String email = claimsByAccessToken.getSubject();
 		String role = claimsByAccessToken.get(AUTHORITIES_KEY).toString();
 
-		tokenProvider.invalidateRefreshToken(id);
+		tokenProvider.invalidateRefreshToken(email);
 
-		log.info("{}-{}: logout ({})", id, role, new Date());
+		log.info("{}-{}: logout ({})", email, role, new Date());
 		response.addHeader(HttpHeaders.SET_COOKIE,
 			CookieUtil.createCookie(REFRESH_TOKEN_COOKIE_NAME, null, REFRESH_EXPIRATION_DELETE).toString());
 		response.setStatus(HttpServletResponse.SC_OK);

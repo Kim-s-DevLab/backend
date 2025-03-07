@@ -1,0 +1,45 @@
+package eightplusone.bit.fit.global.enums;
+
+import org.springframework.http.HttpMethod;
+
+import lombok.Getter;
+
+@Getter
+public enum ApiEndpoint {
+
+	PUBLIC_GET(HttpMethod.GET, new String[] {
+		"/swagger-ui/**",
+		"/actuator/**",
+		"/v3/api-docs/**",
+	}),
+
+	PUBLIC_POST(HttpMethod.POST, new String[] {
+		"/api/v1/auth/reissue",
+		"/api/v1/auth/token-exchange"
+	}),
+
+	AUTHENTICATED_GET(HttpMethod.GET, new String[] {
+	}),
+
+	AUTHENTICATED_POST(HttpMethod.POST, new String[] {
+		"/api/v1/auth/logout"
+	}),
+
+	AUTHENTICATED_PUT(HttpMethod.PUT, new String[] {
+	}),
+
+	AUTHENTICATED_PATCH(HttpMethod.PATCH, new String[] {
+	}),
+
+	AUTHENTICATED_DELETE(HttpMethod.DELETE, new String[] {
+	});
+
+	private final HttpMethod method;
+	private final String[] paths;
+
+	ApiEndpoint(HttpMethod method, String[] paths) {
+		this.method = method;
+		this.paths = paths;
+	}
+}
+

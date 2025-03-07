@@ -1,6 +1,7 @@
 package eightplusone.bit.fit.global.config;
 
 import static eightplusone.bit.fit.global.constants.CorsConstant.*;
+import static eightplusone.bit.fit.global.enums.ApiEndpoint.*;
 
 import java.util.Collections;
 
@@ -14,13 +15,15 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.authentication.logout.LogoutFilter;
 import org.springframework.web.cors.CorsConfiguration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import eightplusone.bit.fit.domain.auth.enums.Role;
 import eightplusone.bit.fit.domain.auth.filter.CustomLogoutFilter;
 import eightplusone.bit.fit.domain.auth.filter.JwtAuthenticationFilter;
+import eightplusone.bit.fit.domain.auth.handler.CustomAccessDeniedHandler;
+import eightplusone.bit.fit.domain.auth.handler.CustomAuthenticationEntryPoint;
 import eightplusone.bit.fit.domain.auth.handler.CustomOAuth2AuthenticationFailureHandler;
 import eightplusone.bit.fit.domain.auth.handler.CustomOAuth2SuccessHandler;
 import eightplusone.bit.fit.domain.auth.jwt.TokenProvider;
@@ -31,7 +34,6 @@ import eightplusone.bit.fit.domain.auth.service.CustomOAuth2UserService;
 public class SecurityConfig {
 
 	private final String allowedOrigins;
-
 	private final TokenProvider tokenProvider;
 	private final CustomOAuth2UserService customOAuth2UserService;
 	private final ObjectMapper objectMapper;
@@ -66,15 +68,34 @@ public class SecurityConfig {
 			.httpBasic(AbstractHttpConfigurer::disable)
 			.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 			.authorizeHttpRequests(auth -> auth
-				.anyRequest().permitAll() // 모든 요청 허용
+				.requestMatchers(PUBLIC_GET.getMethod(), PUBLIC_GET.getPaths())
+				.permitAll()
+				.requestMatchers(PUBLIC_POST.getMethod(), PUBLIC_POST.getPaths())
+				.permitAll()
+
+				.requestMatchers(AUTHENTICATED_GET.getMethod(), AUTHENTICATED_GET.getPaths())
+				.hasAuthority(Role.USER.getKey())
+				.requestMatchers(AUTHENTICATED_POST.getMethod(), AUTHENTICATED_POST.getPaths())
+				.hasAuthority(Role.USER.getKey())
+				.requestMatchers(AUTHENTICATED_PUT.getMethod(), AUTHENTICATED_PUT.getPaths())
+				.hasAuthority(Role.USER.getKey())
+				.requestMatchers(AUTHENTICATED_PATCH.getMethod(), AUTHENTICATED_PATCH.getPaths())
+				.hasAuthority(Role.USER.getKey())
+				.requestMatchers(AUTHENTICATED_DELETE.getMethod(), AUTHENTICATED_DELETE.getPaths())
+				.hasAuthority(Role.USER.getKey())
+
+				.anyRequest()
+				.permitAll() // 모든 요청 허용
 			)
-			.addFilterAfter(new JwtAuthenticationFilter(tokenProvider), UsernamePasswordAuthenticationFilter.class)
-			.addFilterBefore(new CustomLogoutFilter(tokenProvider, objectMapper), LogoutFilter.class)
+			.addFilterBefore(new JwtAuthenticationFilter(tokenProvider), UsernamePasswordAuthenticationFilter.class)
+			.addFilterAfter(new CustomLogoutFilter(tokenProvider, objectMapper), JwtAuthenticationFilter.class)
 			.oauth2Login((oauth2) -> oauth2.userInfoEndpoint(
 					(userInfoEndpointConfig -> userInfoEndpointConfig.userService(customOAuth2UserService)))
 				.successHandler(new CustomOAuth2SuccessHandler(tokenProvider, allowedOrigins))
-				.failureHandler(new CustomOAuth2AuthenticationFailureHandler(allowedOrigins))
-			);
+				.failureHandler(new CustomOAuth2AuthenticationFailureHandler(allowedOrigins)))
+			.exceptionHandling((exceptionHandling) -> exceptionHandling
+				.authenticationEntryPoint(new CustomAuthenticationEntryPoint(objectMapper))
+				.accessDeniedHandler(new CustomAccessDeniedHandler(objectMapper)));
 
 		return http.build();
 	}
