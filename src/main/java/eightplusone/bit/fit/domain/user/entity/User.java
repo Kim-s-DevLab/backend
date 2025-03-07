@@ -34,13 +34,13 @@ public class User extends BaseTimeEntity {
 	@Column(name = "provider", length = 100, unique = true)
 	private String provider;
 
-	@Column(name = "job", length = 20, nullable = false)
+	@Column(name = "job", length = 20)
 	private String job;
 
 	@Column(name = "years")
 	private Integer years;
 
-	@Column(name = "interests", length = 30, nullable = false)
+	@Column(name = "interests", length = 30)
 	private String interests;
 
 	@Column(name = "image", length = 200)
