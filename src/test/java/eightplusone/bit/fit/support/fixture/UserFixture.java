@@ -1,4 +1,4 @@
-package eightplusone.bit.fit.support;
+package eightplusone.bit.fit.support.fixture;
 
 import eightplusone.bit.fit.domain.auth.enums.Role;
 import eightplusone.bit.fit.domain.user.entity.User;
