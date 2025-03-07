@@ -1,6 +1,7 @@
 package eightplusone.bit.fit.domain.auth.filter;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -8,6 +9,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import eightplusone.bit.fit.domain.auth.jwt.TokenProvider;
+import eightplusone.bit.fit.global.enums.ApiEndpoint;
 import io.jsonwebtoken.IncorrectClaimException;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
@@ -61,6 +63,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 	protected boolean shouldNotFilter(HttpServletRequest request) {
 		String requestUri = request.getRequestURI();
-		return requestUri.equals("/api/v1/auth/reissue") || requestUri.equals("/api/v1/auth/token-exchange");
+		return Arrays.stream(ApiEndpoint.values())
+			.filter(endpoint -> endpoint.name().startsWith("PUBLIC_"))
+			.flatMap(endpoint -> Arrays.stream(endpoint.getPaths()))
+			.map(path -> path.replace("**", ".*"))
+			.anyMatch(requestUri::matches);
 	}
 }

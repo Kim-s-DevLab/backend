@@ -10,7 +10,7 @@ public enum ApiEndpoint {
 	PUBLIC_GET(HttpMethod.GET, new String[] {
 		"/swagger-ui/**",
 		"/actuator/**",
-		"/v3/api-docs/**",
+		"/v3/**",
 	}),
 
 	PUBLIC_POST(HttpMethod.POST, new String[] {

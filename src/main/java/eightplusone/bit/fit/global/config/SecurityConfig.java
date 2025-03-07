@@ -15,6 +15,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.logout.LogoutFilter;
 import org.springframework.web.cors.CorsConfiguration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -87,8 +88,8 @@ public class SecurityConfig {
 				.anyRequest()
 				.permitAll() // 모든 요청 허용
 			)
-			.addFilterBefore(new JwtAuthenticationFilter(tokenProvider), UsernamePasswordAuthenticationFilter.class)
-			.addFilterAfter(new CustomLogoutFilter(tokenProvider, objectMapper), JwtAuthenticationFilter.class)
+			.addFilterAfter(new JwtAuthenticationFilter(tokenProvider), UsernamePasswordAuthenticationFilter.class)
+			.addFilterBefore(new CustomLogoutFilter(tokenProvider, objectMapper), LogoutFilter.class)
 			.oauth2Login((oauth2) -> oauth2.userInfoEndpoint(
 					(userInfoEndpointConfig -> userInfoEndpointConfig.userService(customOAuth2UserService)))
 				.successHandler(new CustomOAuth2SuccessHandler(tokenProvider, allowedOrigins))
