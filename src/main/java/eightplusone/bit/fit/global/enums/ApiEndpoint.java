@@ -32,6 +32,7 @@ public enum ApiEndpoint {
 	}),
 
 	AUTHENTICATED_DELETE(HttpMethod.DELETE, new String[] {
+		"/api/v1/users"
 	});
 
 	private final HttpMethod method;
