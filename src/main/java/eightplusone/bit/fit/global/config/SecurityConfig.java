@@ -14,24 +14,38 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.logout.LogoutFilter;
 import org.springframework.web.cors.CorsConfiguration;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import eightplusone.bit.fit.domain.auth.filter.CustomLogoutFilter;
 import eightplusone.bit.fit.domain.auth.filter.JwtAuthenticationFilter;
+import eightplusone.bit.fit.domain.auth.handler.CustomOAuth2AuthenticationFailureHandler;
 import eightplusone.bit.fit.domain.auth.handler.CustomOAuth2SuccessHandler;
 import eightplusone.bit.fit.domain.auth.jwt.TokenProvider;
 import eightplusone.bit.fit.domain.auth.service.CustomOAuth2UserService;
-import lombok.RequiredArgsConstructor;
 
 @Configuration
 @EnableWebSecurity
-@RequiredArgsConstructor
 public class SecurityConfig {
 
-	@Value("${cors.allow.origins}")
-	private static String allowedOrigins;
+	private final String allowedOrigins;
 
 	private final TokenProvider tokenProvider;
 	private final CustomOAuth2UserService customOAuth2UserService;
+	private final ObjectMapper objectMapper;
+
+	public SecurityConfig(
+		@Value("${cors.allow.origins}") String allowedOrigins,
+		TokenProvider tokenProvider,
+		CustomOAuth2UserService customOAuth2UserService,
+		ObjectMapper objectMapper) {
+		this.allowedOrigins = allowedOrigins;
+		this.tokenProvider = tokenProvider;
+		this.customOAuth2UserService = customOAuth2UserService;
+		this.objectMapper = objectMapper;
+	}
 
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -55,9 +69,11 @@ public class SecurityConfig {
 				.anyRequest().permitAll() // 모든 요청 허용
 			)
 			.addFilterAfter(new JwtAuthenticationFilter(tokenProvider), UsernamePasswordAuthenticationFilter.class)
+			.addFilterBefore(new CustomLogoutFilter(tokenProvider, objectMapper), LogoutFilter.class)
 			.oauth2Login((oauth2) -> oauth2.userInfoEndpoint(
 					(userInfoEndpointConfig -> userInfoEndpointConfig.userService(customOAuth2UserService)))
-				.successHandler(new CustomOAuth2SuccessHandler(tokenProvider))
+				.successHandler(new CustomOAuth2SuccessHandler(tokenProvider, allowedOrigins))
+				.failureHandler(new CustomOAuth2AuthenticationFailureHandler(allowedOrigins))
 			);
 
 		return http.build();
