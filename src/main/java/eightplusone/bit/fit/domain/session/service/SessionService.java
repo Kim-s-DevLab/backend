@@ -23,17 +23,18 @@ public class SessionService {
 	// TODO: User ID 매개변수 부분 -> 토큰으로 수정
 	// 체크인 시 레디스에 저장
 	public void checkIn(Long userId) {
-		redisTemplate.opsForHash().put("session_user", userId, "null");
+		redisTemplate.opsForHash().put("session_user", String.valueOf(userId), "null");
 	}
 
 	// TODO: User ID 매개변수 부분 -> 토큰으로 수정
 	// 체크아웃 시 레디스에서 삭제
 	public void checkOut(Long userId) {
-		redisTemplate.opsForHash().delete("session_user", userId);
+		redisTemplate.opsForHash().delete("session_user", String.valueOf(userId));
 	}
 
 	public Map<Long, Map<String, Object>> getUpdatedSessionData() {
 		List<Session> sessions = sessionRepository.findAll();
+		System.out.println(sessions.get(0).getSessionId());
 
 		return sessions.stream()
 			.collect(Collectors.toMap(
@@ -53,7 +54,7 @@ public class SessionService {
 			.entries("session_user")
 			.values()
 			.stream()
-			.filter(sessionId::equals)
+			.filter(value -> sessionId.toString().equals(value.toString()))
 			.count();
 
 		Integer standardCnt = session.getStandardCount();
