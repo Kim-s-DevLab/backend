@@ -18,7 +18,7 @@ public class SessionWebSocketController {
 	private final SimpMessagingTemplate messagingTemplate;
 	private final SessionService sessionService;
 
-	@Scheduled(fixedRate = 10000)
+	@Scheduled(fixedRate = 30000)
 	public void broadcastSessionUpdate() {
 		Map<Long, Map<String, Object>> sessionData = sessionService.getUpdatedSessionData();
 		log.info("send congestion data : {}", sessionData.toString());
