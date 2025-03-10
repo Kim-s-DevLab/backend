@@ -18,12 +18,12 @@ jobs:
         env:
           MYSQL_ROOT_PASSWORD: root
           MYSQL_DATABASE: fit
-          MYSQL_USER: fit
-          MYSQL_PASSWORD: fit1234!
+          MYSQL_USER: ${{ secrets.MYSQL_USER }}
+          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
         ports:
           - 3306:3306
         options: >-
-          --health-cmd "mysqladmin ping -h 127.0.0.1 -u fit --password=fit1234!"
+          --health-cmd "mysqladmin ping -h 127.0.0.1 -u ${{ secrets.MYSQL_USER }} --password=${{ secrets.MYSQL_PASSWORD }}"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -61,14 +61,6 @@ jobs:
 
       - name: Grant execute permission to gradlew
         run: chmod +x ./gradlew
-
-      - name: Check MySQL Connection
-        run: |
-          mysqladmin ping -h 127.0.0.1 -u fit --password=fit1234! || echo "MySQL is not available!"
-
-      - name: Check Redis Connection
-        run: |
-          redis-cli ping || echo "Redis is not available!"
 
       - name: Start Kurento Media Server
         run: |
