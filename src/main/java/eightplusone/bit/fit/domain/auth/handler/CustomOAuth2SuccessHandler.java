@@ -5,6 +5,7 @@ import static eightplusone.bit.fit.global.constants.TokenConstant.*;
 import java.io.IOException;
 import java.util.Date;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
@@ -15,15 +16,20 @@ import eightplusone.bit.fit.domain.auth.jwt.TokenProvider;
 import eightplusone.bit.fit.global.utils.CookieUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class CustomOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
 	private final TokenProvider tokenProvider;
+	private final String allowedOrigins;
+
+	public CustomOAuth2SuccessHandler(TokenProvider tokenProvider,
+		@Value("${cors.allow.origins}") String allowedOrigins) {
+		this.tokenProvider = tokenProvider;
+		this.allowedOrigins = allowedOrigins;
+	}
 
 	@Override
 	public void onAuthenticationSuccess(
@@ -44,7 +50,7 @@ public class CustomOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
 		response.addHeader(HttpHeaders.SET_COOKIE,
 			CookieUtil.createCookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken,
 				tokenProvider.getRefreshTokenExpirationSeconds()).toString());
-		response.sendRedirect("http://localhost:3000/main "); //TODO: 이후 프론트 측 에서 원하는 경로로 수정 할 것.
+		response.sendRedirect(allowedOrigins + "/main"); //TODO: 이후 프론트 측 에서 원하는 경로로 수정 할 것.
 		log.info("{}-{}: login ({})", email, role, new Date());
 	}
 }

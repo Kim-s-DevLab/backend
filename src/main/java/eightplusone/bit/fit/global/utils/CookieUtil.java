@@ -25,6 +25,6 @@ public final class CookieUtil {
 				}
 			}
 		}
-		return null;
+		throw new NullPointerException(name + " 쿠키를 찾을 수 없습니다.");
 	}
 }
