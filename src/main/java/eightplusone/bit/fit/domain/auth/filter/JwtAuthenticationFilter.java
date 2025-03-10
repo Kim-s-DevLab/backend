@@ -63,10 +63,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 	protected boolean shouldNotFilter(HttpServletRequest request) {
 		String requestUri = request.getRequestURI();
+		String upgradeHeader = request.getHeader("Upgrade");
 		return Arrays.stream(ApiEndpoint.values())
 			.filter(endpoint -> endpoint.name().startsWith("PUBLIC_"))
 			.flatMap(endpoint -> Arrays.stream(endpoint.getPaths()))
 			.map(path -> path.replace("**", ".*"))
-			.anyMatch(requestUri::matches);
+			.anyMatch(requestUri::matches)
+			|| (upgradeHeader != null && upgradeHeader.equalsIgnoreCase("websocket"));
 	}
 }
