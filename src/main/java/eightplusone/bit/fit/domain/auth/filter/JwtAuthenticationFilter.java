@@ -63,6 +63,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 	protected boolean shouldNotFilter(HttpServletRequest request) {
 		String requestUri = request.getRequestURI();
+		String requestUrl = request.getRequestURL().toString();
+		if (requestUri.startsWith("/ws-room") || requestUri.startsWith("/sub/session") || requestUrl.startsWith(
+			"https://jiangxy.github.io")) { // TODO : 마지막 조건문 삭제
+			return true;
+		} // 혼잡도 관련 -> 토큰 인증 X
 		return Arrays.stream(ApiEndpoint.values())
 			.filter(endpoint -> endpoint.name().startsWith("PUBLIC_"))
 			.flatMap(endpoint -> Arrays.stream(endpoint.getPaths()))
