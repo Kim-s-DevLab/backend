@@ -55,31 +55,28 @@ class CookieUtilTest {
 	}
 
 	@Test
-	@DisplayName("찾는 이름의 쿠키가 요청에 없을 경우 null을_반환한다")
-	void findCookieByNameIfNotFoundThenReturnNull() {
+	@DisplayName("찾는 이름의 쿠키가 요청에 없을 경우 예외를 던진다")
+	void findCookieByNameIfNotFoundThenThrowException() {
 		// given
 		HttpServletRequest request = mock(HttpServletRequest.class);
 		Cookie[] mockCookies = {new Cookie("differentCookie", COOKIE_VALUE)};
 		when(request.getCookies()).thenReturn(mockCookies);
 
-		// when
-		Cookie cookie = CookieUtil.findCookieByName(request, COOKIE_NAME);
-
-		// then
-		assertThat(cookie).isNull();
+		assertThatThrownBy(() -> CookieUtil.findCookieByName(request, COOKIE_NAME))
+			.isInstanceOf(NullPointerException.class)
+			.hasMessageContaining(COOKIE_NAME + " 쿠키를 찾을 수 없습니다.");
 	}
 
 	@Test
-	@DisplayName("요청된 쿠키가 없는 경우 null을_반환한다(")
-	void findCookieIfNullThenReturnNull() {
+	@DisplayName("요청된 쿠키가 없는 경우 예외를 던진다")
+	void findCookieIfNullThenThrowException() {
 		//given
 		HttpServletRequest request = mock(HttpServletRequest.class);
 		when(request.getCookies()).thenReturn(null);
 
-		//when
-		Cookie cookie = CookieUtil.findCookieByName(request, COOKIE_NAME);
-
-		//then
-		assertThat(cookie).isNull();
+		// when & then
+		assertThatThrownBy(() -> CookieUtil.findCookieByName(request, COOKIE_NAME))
+			.isInstanceOf(NullPointerException.class)
+			.hasMessageContaining(COOKIE_NAME + " 쿠키를 찾을 수 없습니다.");
 	}
 }

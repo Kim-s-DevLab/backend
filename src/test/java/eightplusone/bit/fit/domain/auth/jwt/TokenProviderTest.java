@@ -20,7 +20,7 @@ import eightplusone.bit.fit.domain.auth.dto.CustomUserDetails;
 import eightplusone.bit.fit.domain.auth.service.CustomUserDetailsService;
 import eightplusone.bit.fit.domain.auth.service.RedisTokenService;
 import eightplusone.bit.fit.domain.user.entity.User;
-import eightplusone.bit.fit.support.UserFixture;
+import eightplusone.bit.fit.support.fixture.UserFixture;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;

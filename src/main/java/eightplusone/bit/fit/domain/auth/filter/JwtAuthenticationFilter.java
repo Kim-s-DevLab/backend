@@ -1,6 +1,7 @@
 package eightplusone.bit.fit.domain.auth.filter;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -8,7 +9,9 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import eightplusone.bit.fit.domain.auth.jwt.TokenProvider;
+import eightplusone.bit.fit.global.enums.ApiEndpoint;
 import io.jsonwebtoken.IncorrectClaimException;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -40,24 +43,30 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		String accessToken = tokenProvider.resolveAccessToken(request);
 
 		try {
-			if (accessToken != null && tokenProvider.validateAccessToken(accessToken)) {
-				Authentication authentication = tokenProvider.getAuthenticationByAccessToken(accessToken);
-				SecurityContextHolder.getContext().setAuthentication(authentication);
+			if (!tokenProvider.validateAccessToken(accessToken)) {
+				throw new JwtException("잘못된 토큰 입니다.");
 			}
+			Authentication authentication = tokenProvider.getAuthenticationByAccessToken(accessToken);
+			SecurityContextHolder.getContext().setAuthentication(authentication);
+
 		} catch (IncorrectClaimException e) {
 			SecurityContextHolder.clearContext();
 			log.debug("잘못된 토큰 입니다.");
-			response.sendError(403);
+			throw new JwtException("잘못된 토큰 입니다.", e);
 		} catch (UsernameNotFoundException e) {
 			SecurityContextHolder.clearContext();
-			log.debug("회원을 찾을 수 없습니다..");
-			response.sendError(403);
+			log.debug("회원을 찾을 수 없습니다.");
+			throw new UsernameNotFoundException("회원을 찾을 수 없습니다.");
 		}
 		filterChain.doFilter(request, response);
 	}
 
 	protected boolean shouldNotFilter(HttpServletRequest request) {
 		String requestUri = request.getRequestURI();
-		return requestUri.equals("/reissue"); // TODO: API 스펙에 맞게 수정 할 것
+		return Arrays.stream(ApiEndpoint.values())
+			.filter(endpoint -> endpoint.name().startsWith("PUBLIC_"))
+			.flatMap(endpoint -> Arrays.stream(endpoint.getPaths()))
+			.map(path -> path.replace("**", ".*"))
+			.anyMatch(requestUri::matches);
 	}
 }
