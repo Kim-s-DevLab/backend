@@ -110,7 +110,7 @@ public class CallHandler extends TextWebSocketHandler {
 		}
 
 		UserSession viewer = new UserSession(session);
-		if (room.addViewer(viewer)) {
+		if (room.addViewer(viewer, room.getName())) {
 			String sdpOffer = jsonMessage.get("sdpOffer").getAsString();
 			String sdpAnswer = room.processViewerOffer(viewer, sdpOffer);
 			sendResponse(session, "viewerResponse", "accepted", "sdpAnswer", sdpAnswer);
@@ -142,7 +142,7 @@ public class CallHandler extends TextWebSocketHandler {
 			room.removePresenter();
 			roomManager.removeRoom(room.getName());
 		} else {
-			room.removeViewer(session.getId());
+			room.removeViewer(session.getId(), room.getName());
 		}
 		session.close();
 	}
@@ -157,7 +157,7 @@ public class CallHandler extends TextWebSocketHandler {
 				return;
 			}
 			log.info("Checking if {} is a viewer in room {}", session.getId(), room.getName());
-			room.removeViewer(session.getId());
+			room.removeViewer(session.getId(), room.getName());
 		}
 	}
 
