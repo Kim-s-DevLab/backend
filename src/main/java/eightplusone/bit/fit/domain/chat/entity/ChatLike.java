@@ -1,20 +1,16 @@
 package eightplusone.bit.fit.domain.chat.entity;
 
+import org.springframework.data.redis.core.RedisHash;
+
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-// @Entity
+@RedisHash(value = "chat_like")
 @Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
 public class ChatLike {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
