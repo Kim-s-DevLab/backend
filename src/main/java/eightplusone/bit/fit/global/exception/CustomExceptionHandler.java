@@ -15,14 +15,14 @@ import eightplusone.bit.fit.global.dto.ResponseDto;
 public class CustomExceptionHandler {
 
 	@ExceptionHandler(CustomException.class)
-	protected ResponseEntity<ResponseDto> handleCustomException(CustomException e) {
+	protected ResponseEntity<ResponseDto<Object>> handleCustomException(CustomException e) {
 		ErrorCode errorCode = e.getErrorCode();
 		HttpStatus status = errorCode.getHttpStatus();
 		return ResponseEntity.status(status).body(ResponseDto.fail(status, errorCode.getMessage()));
 	}
 
 	@ExceptionHandler(MethodArgumentNotValidException.class)
-	ResponseEntity<ResponseDto> handleValidationException(MethodArgumentNotValidException e) {
+	ResponseEntity<ResponseDto<Object>> handleValidationException(MethodArgumentNotValidException e) {
 		FieldError fieldError = e.getBindingResult()
 			.getFieldErrors()
 			.get(e.getBindingResult().getFieldErrors().size() - 1);
