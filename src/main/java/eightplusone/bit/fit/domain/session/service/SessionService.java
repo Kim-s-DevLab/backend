@@ -36,18 +36,18 @@ public class SessionService {
 	}
 
 	// 혼잡도 전송
-	public Map<Long, Map<String, Object>> getUpdatedSessionData() {
+	public Map<Integer, Map<String, Object>> getUpdatedSessionData() {
 		List<Session> sessions = sessionRepository.findAll();
 		HashOperations<String, String, String> hashOps = redisTemplate.opsForHash();
 
 		return sessions.stream()
 			.collect(Collectors.toMap(
-				Session::getSessionId,
+				Session::getNumber,
 				session -> {
-					double percent = getCongestionPercent(session.getSessionId());
+					double percent = getCongestionPercent(session.getNumber());
 					String level = getCongestionLevel(percent);
 
-					hashOps.put(SESSION_CONGESTION_KEY, session.getSessionId().toString(), level);
+					hashOps.put(SESSION_CONGESTION_KEY, session.getNumber().toString(), level);
 
 					return Map.of("percent", percent, "level", level);
 				}
@@ -55,14 +55,14 @@ public class SessionService {
 	}
 
 	// 혼잡도 퍼센트
-	private double getCongestionPercent(Long sessionId) {
-		Session session = sessionRepository.findById(sessionId)
-			.orElseThrow(() -> new EntityNotFoundException(sessionId + "에 해당하는 세션을 찾을 수 없습니다."));
+	private double getCongestionPercent(Integer sessionNumber) {
+		Session session = sessionRepository.findByNumber(sessionNumber)
+			.orElseThrow(() -> new EntityNotFoundException(sessionNumber + "에 해당하는 세션을 찾을 수 없습니다."));
 
 		long connectedUsers = redisTemplate.opsForHash()
 			.values(SESSION_USER_KEY)
 			.stream()
-			.filter(value -> sessionId.toString().equals(value.toString()))
+			.filter(value -> sessionNumber.toString().equals(value.toString()))
 			.count();
 
 		Integer standardCnt = session.getStandardCount();
@@ -76,18 +76,18 @@ public class SessionService {
 	}
 
 	// 혼잡도 변경 시 -> 스트리밍쪽에서 설정
-	public void updateAndBroadcastIfChanged(Long sessionId) {
+	public void updateAndBroadcastIfChanged(Integer sessionNumber) {
 		HashOperations<String, String, String> hashOps = redisTemplate.opsForHash();
 
-		double percent = getCongestionPercent(sessionId);
+		double percent = getCongestionPercent(sessionNumber);
 		String newLevel = getCongestionLevel(percent);
 
-		String previousLevel = hashOps.get(SESSION_CONGESTION_KEY, sessionId);
+		String previousLevel = hashOps.get(SESSION_CONGESTION_KEY, sessionNumber);
 
 		if (!newLevel.equals(previousLevel)) {
-			hashOps.put(SESSION_CONGESTION_KEY, sessionId.toString(), newLevel);
+			hashOps.put(SESSION_CONGESTION_KEY, sessionNumber.toString(), newLevel);
 			redisTemplate.convertAndSend("/sub/ws-room", Map.of(
-				"sessionId", sessionId,
+				"sessionId", sessionNumber,
 				"percent", percent,
 				"level", newLevel
 			));

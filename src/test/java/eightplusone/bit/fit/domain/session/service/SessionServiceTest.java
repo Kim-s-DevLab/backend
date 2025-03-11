@@ -66,46 +66,46 @@ class SessionServiceTest {
 	@Test
 	void getUpdatedSessionData() {
 		Session session = new Session();
-		setField(session, "sessionId", 123L);
+		setField(session, "number", 123);
 		setField(session, "standardCount", 10);
 
 		when(sessionRepository.findAll()).thenReturn(List.of(session));
-		when(sessionRepository.findById(123L)).thenReturn(Optional.of(session));
+		when(sessionRepository.findByNumber(123)).thenReturn(Optional.of(session));
 
 		when(hashOperations.values("session_user")).thenReturn(List.of("123", "123")); // 2명 접속
 
 		when(redisTemplate.opsForHash()).thenReturn(hashOperations);
 
-		Map<Long, Map<String, Object>> result = sessionService.getUpdatedSessionData();
+		Map<Integer, Map<String, Object>> result = sessionService.getUpdatedSessionData();
 
-		assertThat(result).containsKey(123L);
-		assertThat(result.get(123L)).containsEntry("percent", 20.0);
+		assertThat(result).containsKey(123);
+		assertThat(result.get(123)).containsEntry("percent", 20.0);
 	}
 
 	@Test
 	void updateAndBroadcastIfChanged() {
 		// Given
-		Long sessionId = 123L;
+		Integer number = 123;
 		double percent = 100.0;
 		String currentLevel = "여유"; // 기존 값
 		String newLevel = "혼잡"; // 예상값 (변경됨)
 		Session session = new Session();
-		setField(session, "sessionId", 123L);
+		setField(session, "number", 123);
 		setField(session, "standardCount", 5);
 
 		when(redisTemplate.opsForHash()).thenReturn(hashOperations);
-		when(hashOperations.get("session_congestion", sessionId)).thenReturn(currentLevel);
-		when(sessionRepository.findById(sessionId)).thenReturn(Optional.of(session));
+		when(hashOperations.get("session_congestion", number)).thenReturn(currentLevel);
+		when(sessionRepository.findByNumber(number)).thenReturn(Optional.of(session));
 		when(hashOperations.values("session_user")).thenReturn(List.of("123", "123", "123", "123", "123"));
 
 		// When
-		sessionService.updateAndBroadcastIfChanged(sessionId);
+		sessionService.updateAndBroadcastIfChanged(number);
 
 		// Then
-		verify(hashOperations).put("session_congestion", sessionId.toString(), newLevel);
+		verify(hashOperations).put("session_congestion", number.toString(), newLevel);
 		verify(redisTemplate).convertAndSend(eq("/sub/ws-room"), argThat(message -> {
 			Map<String, Object> msg = (Map<String, Object>)message;
-			return msg.get("sessionId").equals(sessionId) &&
+			return msg.get("sessionId").equals(number) &&
 				msg.get("percent").equals(percent) &&
 				msg.get("level").equals(newLevel);
 		}));
