@@ -11,6 +11,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import eightplusone.bit.fit.domain.user.service.UserService;
 import eightplusone.bit.fit.global.utils.CookieUtil;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -20,6 +23,12 @@ public class UserController {
 
 	private final UserService userService;
 
+	@Operation(summary = "회원탈퇴 요청", description = "**성공 응답 데이터:**  브라우저 쿠키 초기화"
+		+ ", 소셜 로그인 연결끊기가 함께 진행됩니다.")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "201", description = "회원 탈퇴 완료"),
+		@ApiResponse(responseCode = "401", description = "유효한 토큰이 아닙니다. 재 로그인 후 탈퇴를 시도하세요."),
+	})
 	@DeleteMapping
 	public ResponseEntity<?> delete() {
 		userService.delete();

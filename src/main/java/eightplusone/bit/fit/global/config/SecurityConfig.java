@@ -4,6 +4,7 @@ import static eightplusone.bit.fit.global.constants.CorsConstant.*;
 import static eightplusone.bit.fit.global.enums.ApiEndpoint.*;
 
 import java.util.Collections;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -55,7 +56,8 @@ public class SecurityConfig {
 		http
 			.cors(corsCustomizer -> corsCustomizer.configurationSource(request -> {
 				CorsConfiguration configuration = new CorsConfiguration();
-				configuration.setAllowedOrigins(Collections.singletonList(allowedOrigins));
+				configuration.setAllowedOrigins(
+					List.of("https://jiangxy.github.io", "http://localhost:5137")); // TODO : 혼잡도 구현 끝날 경우 원본으로 되돌리기
 				configuration.setAllowedMethods(ALLOWED_METHODS);
 				configuration.setAllowCredentials(ALLOWED_CREDENTIALS);
 				configuration.setAllowedHeaders(ALLOWED_HEADERS);
