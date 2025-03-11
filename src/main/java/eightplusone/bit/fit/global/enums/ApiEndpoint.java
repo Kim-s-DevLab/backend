@@ -15,7 +15,9 @@ public enum ApiEndpoint {
 
 	PUBLIC_POST(HttpMethod.POST, new String[] {
 		"/api/v1/auth/reissue",
-		"/api/v1/auth/token-exchange"
+		"/api/v1/auth/token-exchange",
+		"/api/v1/enter/checkin",
+		"/api/v1/enter/checkout"
 	}),
 
 	AUTHENTICATED_GET(HttpMethod.GET, new String[] {
