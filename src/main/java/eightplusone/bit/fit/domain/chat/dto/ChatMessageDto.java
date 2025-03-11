@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 public class ChatMessageDto {
-	private Long userId;
+	// private Long userId;
 	private ChatCategory category;
 	private String message;
 }
