@@ -5,10 +5,16 @@ import java.util.List;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import eightplusone.bit.fit.domain.chat.dto.ChatMessageDto;
+import eightplusone.bit.fit.domain.chat.entity.ChatMessage;
 import eightplusone.bit.fit.domain.chat.repository.ChatRepository;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
 public class ChatService {
 	private final ChatRepository chatRepository;
 	private final RedisTemplate<String, Object> redisTemplate;
@@ -19,22 +25,23 @@ public class ChatService {
 	}
 
 	// 메시지 전송 (Redis Pub/Sub 사용)
-	public void sendMessage(ChatMessageDto dto, String userId) {
-		// ChatMessage message = new ChatMessage();
-		// message.setUserId(userId);
-		// message.setCategory(dto.getCategory());
-		// message.setMessage(dto.getMessage());
-		// message.setTimestamp(LocalDateTime.now());
+	public void sendMessage(ChatMessageDto dto, String userId, String sessionId) throws JsonProcessingException {
+		ObjectMapper objectMapper = new ObjectMapper();
+		ChatMessage message = ChatMessage.builder()
+			.sessionId(sessionId)
+			.userId(userId)
+			.category(dto.getCategory())
+			.message(dto.getMessage())
+			.build();
 
-		// DB 저장
-		// chatRepository.saveMessage(message);
+		chatRepository.saveMessage(message);
 
-		// "userId|category|message" 형식으로 변환하여 Redis에 전송
-		String redisMessage = userId + "|" + dto.getCategory() + "|" + dto.getMessage();
-		System.out.println("🔹 Redis로 전송할 메시지: " + redisMessage);
-		redisTemplate.convertAndSend("chat-room", redisMessage);
-		System.out.println("✅ Redis에 메시지 발행 완료");
+		String jsonMessage = objectMapper.writeValueAsString(message);
+		String redisKey = "chat-" + sessionId;
 
+		log.info("Redis 발행 메세지 : {}->{}", redisKey, jsonMessage);
+
+		redisTemplate.convertAndSend(redisKey, dto);
 	}
 
 	// 최근 메시지 조회
