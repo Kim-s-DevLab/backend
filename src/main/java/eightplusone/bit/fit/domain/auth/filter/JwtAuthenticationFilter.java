@@ -65,7 +65,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		String requestUri = request.getRequestURI();
 		String requestUrl = request.getRequestURL().toString();
 		if (requestUri.startsWith("/ws-room") || requestUri.startsWith("/sub/session") || requestUrl.startsWith(
-			"https://jiangxy.github.io")) { // TODO : 마지막 조건문 삭제
+			"https://jiangxy.github.io") || requestUri.startsWith("/ws-chat")) { // TODO : 마지막 조건문 삭제
 			return true;
 		} // 혼잡도 관련 -> 토큰 인증 X
 		return Arrays.stream(ApiEndpoint.values())
