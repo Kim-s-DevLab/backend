@@ -64,11 +64,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	protected boolean shouldNotFilter(HttpServletRequest request) {
 		String requestUri = request.getRequestURI();
 		String upgradeHeader = request.getHeader("Upgrade");
+		String requestUrl = request.getRequestURL().toString();
+
 		return Arrays.stream(ApiEndpoint.values())
 			.filter(endpoint -> endpoint.name().startsWith("PUBLIC_"))
 			.flatMap(endpoint -> Arrays.stream(endpoint.getPaths()))
 			.map(path -> path.replace("**", ".*"))
 			.anyMatch(requestUri::matches)
-			|| (upgradeHeader != null && upgradeHeader.equalsIgnoreCase("websocket"));
+			|| (upgradeHeader != null && upgradeHeader.equalsIgnoreCase("websocket")
+			|| requestUri.startsWith("/ws-room")
+			|| requestUri.startsWith("/sub/session")
+			|| requestUrl.startsWith("https://jiangxy.github.io") // TODO : 마지막 조건문 삭제
+		);
 	}
 }
