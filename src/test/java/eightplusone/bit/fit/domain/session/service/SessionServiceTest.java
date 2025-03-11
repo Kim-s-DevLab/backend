@@ -66,11 +66,11 @@ class SessionServiceTest {
 	@Test
 	void getUpdatedSessionData() {
 		Session session = new Session();
-		setField(session, "number", 123);
+		setField(session, "audioChannel", 123);
 		setField(session, "standardCount", 10);
 
 		when(sessionRepository.findAll()).thenReturn(List.of(session));
-		when(sessionRepository.findByNumber(123)).thenReturn(Optional.of(session));
+		when(sessionRepository.findByAudioChannel(123)).thenReturn(Optional.of(session));
 
 		when(hashOperations.values("session_user")).thenReturn(List.of("123", "123")); // 2명 접속
 
@@ -85,27 +85,27 @@ class SessionServiceTest {
 	@Test
 	void updateAndBroadcastIfChanged() {
 		// Given
-		Integer number = 123;
+		Integer audioChannel = 123;
 		double percent = 100.0;
 		String currentLevel = "여유"; // 기존 값
 		String newLevel = "혼잡"; // 예상값 (변경됨)
 		Session session = new Session();
-		setField(session, "number", 123);
+		setField(session, "audioChannel", 123);
 		setField(session, "standardCount", 5);
 
 		when(redisTemplate.opsForHash()).thenReturn(hashOperations);
-		when(hashOperations.get("session_congestion", number)).thenReturn(currentLevel);
-		when(sessionRepository.findByNumber(number)).thenReturn(Optional.of(session));
+		when(hashOperations.get("session_congestion", audioChannel)).thenReturn(currentLevel);
+		when(sessionRepository.findByAudioChannel(audioChannel)).thenReturn(Optional.of(session));
 		when(hashOperations.values("session_user")).thenReturn(List.of("123", "123", "123", "123", "123"));
 
 		// When
-		sessionService.updateAndBroadcastIfChanged(number);
+		sessionService.updateAndBroadcastIfChanged(audioChannel);
 
 		// Then
-		verify(hashOperations).put("session_congestion", number.toString(), newLevel);
+		verify(hashOperations).put("session_congestion", audioChannel.toString(), newLevel);
 		verify(redisTemplate).convertAndSend(eq("/sub/ws-room"), argThat(message -> {
 			Map<String, Object> msg = (Map<String, Object>)message;
-			return msg.get("sessionId").equals(number) &&
+			return msg.get("sessionId").equals(audioChannel) &&
 				msg.get("percent").equals(percent) &&
 				msg.get("level").equals(newLevel);
 		}));

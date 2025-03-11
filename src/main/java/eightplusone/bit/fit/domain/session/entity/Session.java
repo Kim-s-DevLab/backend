@@ -37,5 +37,5 @@ public class Session {
 	private Integer standardCount;
 
 	@Column(nullable = false)
-	private Integer number;
+	private Integer audioChannel;
 }

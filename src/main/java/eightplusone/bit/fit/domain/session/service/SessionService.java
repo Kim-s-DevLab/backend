@@ -42,12 +42,12 @@ public class SessionService {
 
 		return sessions.stream()
 			.collect(Collectors.toMap(
-				Session::getNumber,
+				Session::getAudioChannel,
 				session -> {
-					double percent = getCongestionPercent(session.getNumber());
+					double percent = getCongestionPercent(session.getAudioChannel());
 					String level = getCongestionLevel(percent);
 
-					hashOps.put(SESSION_CONGESTION_KEY, session.getNumber().toString(), level);
+					hashOps.put(SESSION_CONGESTION_KEY, session.getAudioChannel().toString(), level);
 
 					return Map.of("percent", percent, "level", level);
 				}
@@ -55,14 +55,14 @@ public class SessionService {
 	}
 
 	// 혼잡도 퍼센트
-	private double getCongestionPercent(Integer sessionNumber) {
-		Session session = sessionRepository.findByNumber(sessionNumber)
-			.orElseThrow(() -> new EntityNotFoundException(sessionNumber + "에 해당하는 세션을 찾을 수 없습니다."));
+	private double getCongestionPercent(Integer audioChannel) {
+		Session session = sessionRepository.findByAudioChannel(audioChannel)
+			.orElseThrow(() -> new EntityNotFoundException(audioChannel + "에 해당하는 세션을 찾을 수 없습니다."));
 
 		long connectedUsers = redisTemplate.opsForHash()
 			.values(SESSION_USER_KEY)
 			.stream()
-			.filter(value -> sessionNumber.toString().equals(value.toString()))
+			.filter(value -> audioChannel.toString().equals(value.toString()))
 			.count();
 
 		Integer standardCnt = session.getStandardCount();
@@ -76,18 +76,18 @@ public class SessionService {
 	}
 
 	// 혼잡도 변경 시 -> 스트리밍쪽에서 설정
-	public void updateAndBroadcastIfChanged(Integer sessionNumber) {
+	public void updateAndBroadcastIfChanged(Integer audioChannel) {
 		HashOperations<String, String, String> hashOps = redisTemplate.opsForHash();
 
-		double percent = getCongestionPercent(sessionNumber);
+		double percent = getCongestionPercent(audioChannel);
 		String newLevel = getCongestionLevel(percent);
 
-		String previousLevel = hashOps.get(SESSION_CONGESTION_KEY, sessionNumber);
+		String previousLevel = hashOps.get(SESSION_CONGESTION_KEY, audioChannel);
 
 		if (!newLevel.equals(previousLevel)) {
-			hashOps.put(SESSION_CONGESTION_KEY, sessionNumber.toString(), newLevel);
+			hashOps.put(SESSION_CONGESTION_KEY, audioChannel.toString(), newLevel);
 			redisTemplate.convertAndSend("/sub/ws-room", Map.of(
-				"sessionId", sessionNumber,
+				"sessionId", audioChannel,
 				"percent", percent,
 				"level", newLevel
 			));
