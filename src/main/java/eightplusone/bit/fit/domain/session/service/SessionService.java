@@ -25,14 +25,14 @@ public class SessionService {
 
 	// TODO: User ID 매개변수 부분 -> 토큰으로 수정
 	// 체크인 시 레디스에 저장
-	public void checkIn(Long userId) {
-		redisTemplate.opsForHash().put(SESSION_USER_KEY, String.valueOf(userId), "null");
+	public void checkIn(String email) {
+		redisTemplate.opsForHash().put(SESSION_USER_KEY, email, "null");
 	}
 
 	// TODO: User ID 매개변수 부분 -> 토큰으로 수정
 	// 체크아웃 시 레디스에서 삭제
-	public void checkOut(Long userId) {
-		redisTemplate.opsForHash().delete(SESSION_USER_KEY, String.valueOf(userId));
+	public void checkOut(String email) {
+		redisTemplate.opsForHash().delete(SESSION_USER_KEY, email);
 	}
 
 	// 혼잡도 전송

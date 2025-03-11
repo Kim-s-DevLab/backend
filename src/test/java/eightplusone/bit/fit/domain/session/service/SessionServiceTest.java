@@ -42,25 +42,25 @@ class SessionServiceTest {
 	@Test
 	void checkIn() {
 		// Given
-		Long userId = 1L;
+		String email = "test@gmail.com";
 
 		// When
-		sessionService.checkIn(userId);
+		sessionService.checkIn(email);
 
 		// Then
-		verify(hashOperations).put("session_user", userId.toString(), "null");
+		verify(hashOperations).put("session_user", email, "null");
 	}
 
 	@Test
 	void checkOut() {
 		// Given
-		Long userId = 1L;
+		String email = "test@gmail.com";
 
 		// When
-		sessionService.checkOut(userId);
+		sessionService.checkOut(email);
 
 		// Then
-		verify(hashOperations).delete("session_user", userId.toString());
+		verify(hashOperations).delete("session_user", email);
 	}
 
 	@Test
