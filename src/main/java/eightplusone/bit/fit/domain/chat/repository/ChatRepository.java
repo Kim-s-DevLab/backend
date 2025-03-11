@@ -10,8 +10,8 @@ import eightplusone.bit.fit.domain.chat.entity.ChatMessage;
 
 @Repository
 public class ChatRepository {
-	private static final String CHAT_LIST_KEY = "chatMessages";
-	private static final String LIKES_KEY = "chatLikes";
+	private static final String CHAT_LIST_KEY = "chat-";
+	private static final String LIKES_KEY = "chat_like";
 	private static final int MAX_CHAT_SIZE = 1000;
 
 	private final RedisTemplate<String, Object> redisTemplate;
@@ -22,8 +22,8 @@ public class ChatRepository {
 
 	// 채팅 메시지 저장
 	public void saveMessage(ChatMessage message) {
-		redisTemplate.opsForList().rightPush(CHAT_LIST_KEY, message);
-		redisTemplate.expire(CHAT_LIST_KEY, Duration.ofHours(2)); // 2시간 후 만료
+		redisTemplate.opsForList().rightPush(CHAT_LIST_KEY + message.getSessionId(), message);
+		redisTemplate.expire(CHAT_LIST_KEY + message.getSessionId(), Duration.ofHours(2)); // 2시간 후 만료
 
 		// 메시지 1000개 유지
 		if (redisTemplate.opsForList().size(CHAT_LIST_KEY) > MAX_CHAT_SIZE) {
