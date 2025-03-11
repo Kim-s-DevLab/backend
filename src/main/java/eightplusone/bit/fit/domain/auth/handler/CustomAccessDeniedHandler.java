@@ -31,6 +31,6 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
 		response.setCharacterEncoding("utf-8");
 		response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 		response.getWriter().write(objectMapper.writeValueAsString(
-			ResponseDto.fail(HttpStatus.UNAUTHORIZED, "권한이 없습니다")));
+			ResponseDto.fail(HttpStatus.FORBIDDEN, "권한이 없습니다")));
 	}
 }
