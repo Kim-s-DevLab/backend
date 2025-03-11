@@ -25,12 +25,12 @@ public class ChatSubscriber implements MessageListener {
 			String[] parts = new String(message.getBody()).split("\\|");
 			if (parts.length == 3) {
 				ChatMessageDto chatMessage = new ChatMessageDto();
-				chatMessage.setUserId(Long.parseLong(parts[0]));  // userId
+				// chatMessage.setUserId(Long.parseLong(parts[0]));  // userId
 				chatMessage.setCategory(ChatCategory.valueOf(parts[1]));               // category
 				chatMessage.setMessage(parts[2]);                // message 내용
 
 				// WebSocket을 통해 구독자에게 메시지 전송
-				messagingTemplate.convertAndSend("/sub/chat", chatMessage);
+				messagingTemplate.convertAndSend("/sub/chat-room", chatMessage);
 				System.out.println("✅ WebSocket으로 전송 완료: " + chatMessage);
 			} else {
 				System.out.println("❌ 메시지 포맷 오류: " + new String(message.getBody()));
