@@ -1,5 +1,9 @@
 package eightplusone.bit.fit.global.config;
 
+import eightplusone.bit.fit.domain.chat.dto.ChatMessageDto;
+import eightplusone.bit.fit.global.pubsub.ChatSubscriber;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -11,11 +15,10 @@ import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
-import eightplusone.bit.fit.domain.chat.dto.ChatMessageDto;
-import eightplusone.bit.fit.global.pubsub.ChatSubscriber;
-
 @Configuration
 public class RedisConfig {
+	private static final Logger logger = LoggerFactory.getLogger(RedisConfig.class);
+
 	@Bean
 	public RedisConnectionFactory redisConnectionFactory() {
 		return new LettuceConnectionFactory();
@@ -42,7 +45,7 @@ public class RedisConfig {
 		RedisMessageListenerContainer container = new RedisMessageListenerContainer();
 		container.setConnectionFactory(connectionFactory);
 		container.addMessageListener(listenerAdapter, new PatternTopic("chat-*")); // "chat-room" 채널 구독
-		System.out.println("✅ Redis 구독 완료: chat-*");
+		logger.info("✅ Redis 구독 완료: chat-*");
 		return container;
 	}
 
