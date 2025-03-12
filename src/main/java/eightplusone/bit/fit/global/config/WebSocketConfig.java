@@ -1,14 +1,21 @@
 package eightplusone.bit.fit.global.config;
 
 import org.springframework.context.annotation.Configuration;
+import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
+import eightplusone.bit.fit.domain.auth.interceptor.WebSocketInterceptor;
+import lombok.RequiredArgsConstructor;
+
 @Configuration
 @EnableWebSocketMessageBroker
+@RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+
+	private final WebSocketInterceptor webSocketInterceptor;
 
 	@Override
 	public void configureMessageBroker(MessageBrokerRegistry config) {
@@ -18,7 +25,13 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
 	@Override
 	public void registerStompEndpoints(StompEndpointRegistry registry) {
-		registry.addEndpoint("/ws-chat").setAllowedOrigins("*").withSockJS();
+		registry.addEndpoint("/ws-chat").setAllowedOriginPatterns("*");
+		registry.addEndpoint("/ws-chat").setAllowedOriginPatterns("*").withSockJS();
 		registry.addEndpoint("/ws-room").setAllowedOriginPatterns("*");
+	}
+
+	@Override
+	public void configureClientInboundChannel(ChannelRegistration registration) {
+		registration.interceptors(webSocketInterceptor);
 	}
 }
