@@ -11,7 +11,7 @@ FROM openjdk:17-jdk-slim
 WORKDIR /app
 
 # 모든 application.yml 파일 복사 (application.yml & application-prod.yml 포함)
-COPY src/main/resources/application*.yml /app/config/
+COPY build/resources/main/application*.yml /app/config/
 
 # JAR 파일 복사
 COPY --from=build /app/app.jar app.jar
