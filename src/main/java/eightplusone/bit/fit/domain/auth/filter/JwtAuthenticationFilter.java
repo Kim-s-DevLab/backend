@@ -3,15 +3,18 @@ package eightplusone.bit.fit.domain.auth.filter;
 import java.io.IOException;
 import java.util.Arrays;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import eightplusone.bit.fit.domain.auth.jwt.TokenProvider;
+import eightplusone.bit.fit.global.dto.ResponseDto;
 import eightplusone.bit.fit.global.enums.ApiEndpoint;
-import io.jsonwebtoken.IncorrectClaimException;
-import io.jsonwebtoken.JwtException;
+import eightplusone.bit.fit.global.exception.CustomException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 	private final TokenProvider tokenProvider;
+	private final ObjectMapper objectMapper;
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -44,21 +48,26 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 		try {
 			if (!tokenProvider.validateAccessToken(accessToken)) {
-				throw new JwtException("잘못된 토큰 입니다.");
+				sendErrorResponse(response, HttpStatus.UNAUTHORIZED, "유효하지 않은 토큰 입니다.");
+				return;
 			}
 			Authentication authentication = tokenProvider.getAuthenticationByAccessToken(accessToken);
 			SecurityContextHolder.getContext().setAuthentication(authentication);
 
-		} catch (IncorrectClaimException e) {
+		} catch (CustomException e) {
 			SecurityContextHolder.clearContext();
-			log.debug("잘못된 토큰 입니다.");
-			throw new JwtException("잘못된 토큰 입니다.", e);
-		} catch (UsernameNotFoundException e) {
-			SecurityContextHolder.clearContext();
-			log.debug("회원을 찾을 수 없습니다.");
-			throw new UsernameNotFoundException("회원을 찾을 수 없습니다.");
+			sendErrorResponse(response, HttpStatus.FORBIDDEN, "접근 권한이 없습니다.");
+			return;
 		}
 		filterChain.doFilter(request, response);
+	}
+
+	private void sendErrorResponse(HttpServletResponse response, HttpStatus status, String message) throws IOException {
+		response.setStatus(status.value());
+		response.setCharacterEncoding("utf-8");
+		response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+		response.getWriter().write(objectMapper.writeValueAsString(
+			ResponseDto.fail(status, message)));
 	}
 
 	protected boolean shouldNotFilter(HttpServletRequest request) {
