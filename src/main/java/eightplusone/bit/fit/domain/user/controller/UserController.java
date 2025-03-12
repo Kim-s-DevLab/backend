@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import eightplusone.bit.fit.domain.user.service.UserService;
+import eightplusone.bit.fit.global.dto.ResponseDto;
 import eightplusone.bit.fit.global.utils.CookieUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -30,11 +31,11 @@ public class UserController {
 		@ApiResponse(responseCode = "401", description = "유효한 토큰이 아닙니다. 재 로그인 후 탈퇴를 시도하세요."),
 	})
 	@DeleteMapping
-	public ResponseEntity<?> delete() {
+	public ResponseEntity<ResponseDto<Object>> delete() {
 		userService.delete();
 		return ResponseEntity.status(CREATED)
 			.header(HttpHeaders.SET_COOKIE,
 				CookieUtil.createCookie(REFRESH_TOKEN_COOKIE_NAME, null, REFRESH_EXPIRATION_DELETE).toString())
-			.body(null);
+			.body(ResponseDto.success(CREATED, "회원 탈퇴 완료", null));
 	}
 }

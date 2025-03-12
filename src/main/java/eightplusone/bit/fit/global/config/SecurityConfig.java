@@ -90,7 +90,8 @@ public class SecurityConfig {
 				.anyRequest()
 				.permitAll() // 모든 요청 허용
 			)
-			.addFilterAfter(new JwtAuthenticationFilter(tokenProvider), UsernamePasswordAuthenticationFilter.class)
+			.addFilterAfter(new JwtAuthenticationFilter(tokenProvider, objectMapper),
+				UsernamePasswordAuthenticationFilter.class)
 			.addFilterBefore(new CustomLogoutFilter(tokenProvider, objectMapper), LogoutFilter.class)
 			.oauth2Login((oauth2) -> oauth2.userInfoEndpoint(
 					(userInfoEndpointConfig -> userInfoEndpointConfig.userService(customOAuth2UserService)))
