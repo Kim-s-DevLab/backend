@@ -1,20 +1,21 @@
 package eightplusone.bit.fit.domain.chat.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import eightplusone.bit.fit.domain.chat.dto.ChatMessageDto;
+import eightplusone.bit.fit.domain.chat.service.ChatService;
 import java.util.List;
-
+import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-
-import eightplusone.bit.fit.domain.chat.dto.ChatMessageDto;
-import eightplusone.bit.fit.domain.chat.service.ChatService;
 
 @RestController
 @RequestMapping("/chat")
@@ -25,7 +26,7 @@ public class ChatController {
 		this.chatService = chatService;
 	}
 
-	// Redis로 발행
+	// Redis 로 발행
 	@MessageMapping("/chat/{sessionId}")
 	public void sendMessage(@DestinationVariable("sessionId") String sessionId,
 		@Payload ChatMessageDto message,
@@ -33,15 +34,24 @@ public class ChatController {
 		chatService.sendMessage(message, userId, sessionId);
 	}
 
-	// 최근 채팅 메시지 조회 (REST API)
-	@GetMapping("/recent")
-	public List<Object> getRecentMessages() {
-		return chatService.getRecentMessages();
+	// 특정 채팅방의 최근 메시지 조회
+	@GetMapping("/{sessionId}/messages")
+	public ResponseEntity<List<Object>> getRecentMessages(@PathVariable String sessionId) {
+		List<Object> messages = chatService.getRecentMessages(sessionId);
+		return ResponseEntity.ok(messages);
 	}
 
-	// 강연 종료 후 데이터 삭제
-	@DeleteMapping("/clear")
-	public void clearChat() {
-		chatService.clearChat();
+	// 특정 채팅방 데이터 삭제 (강연 종료 후)
+	@DeleteMapping("/{sessionId}/clear")
+	public ResponseEntity<String> clearChat(@PathVariable String sessionId) {
+		chatService.clearChat(sessionId);
+		return ResponseEntity.ok("Chat history cleared for session: " + sessionId);
 	}
+
+	// 사용자 이름 저장 (닉네임 변경 시 사용)
+	@PostMapping("/user/update-name")
+	public void updateUserName(@RequestParam String userId, @RequestParam String newName) {
+		chatService.saveUserName(userId, newName);
+	}
+
 }
