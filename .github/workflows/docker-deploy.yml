@@ -67,9 +67,6 @@ jobs:
             sudo usermod -aG docker ubuntu
             newgrp docker  # 그룹 적용
             
-            # at 패키지 설치 (컨테이너 정리 예약 작업용)
-            sudo apt update && sudo apt install -y at
-            
             # Docker 설치 확인 및 설치
             if ! command -v docker &> /dev/null
             then
