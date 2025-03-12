@@ -117,6 +117,7 @@ jobs:
             add_env_var "REDIS_PASSWORD" "${{ secrets.REDIS_PASSWORD }}"
             add_env_var "SPRING_DATASOURCE_URL" "${{ secrets.SPRING_DATASOURCE_URL }}"
             add_env_var "SPRING_REDIS_HOST" "${{ secrets.SPRING_REDIS_HOST }}"
+            add_env_var "DOCKERHUB_USERNAME" "${{ secrets.DOCKERHUB_USERNAME }}"
             
             # 기존 컨테이너 정리
             sudo docker rm -f $(sudo docker ps -aq) # 모든 컨테이너를 강제로 제거
