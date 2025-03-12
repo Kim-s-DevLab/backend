@@ -115,13 +115,16 @@ jobs:
             echo "Deploying new container as GREEN..."
             docker run -d --name green --env-file .env -p 8082:8080 ${{ secrets.DOCKERHUB_USERNAME }}/fit:latest
             
-            # Nginx 설정 변경 후 무중단 배포
-            echo "Switching traffic to GREEN container..."
-            sudo sed -i 's/8081/8082/' /etc/nginx/nginx.conf
-            sudo systemctl reload nginx
+            # 첫 배포 시 `green`을 기본으로 설정
+            if ! docker ps -a --format '{{.Names}}' | grep -q blue; then
+              echo "First deployment detected. Using GREEN as default container."
+              sudo sed -i 's/proxy_pass http:\/\/blue:8080;/proxy_pass http:\/\/green:8080;/' /etc/nginx/conf.d/app.conf
+            else
+              echo "Switching traffic to GREEN container..."
+              sudo sed -i 's/proxy_pass http:\/\/blue:8080;/proxy_pass http:\/\/green:8080;/' /etc/nginx/conf.d/app.conf
+            fi
             
-            echo "Verifying deployment..."
-            curl -s http://localhost:8082/actuator/health || (echo "Deployment failed!" && exit 1)
+            sudo systemctl reload nginx
             
             # 기존 컨테이너 정리 (1시간 후 삭제 -> 임시)
             echo "Scheduling old BLUE container for cleanup in 1 hour..."
