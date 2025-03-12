@@ -1,8 +1,8 @@
 package eightplusone.bit.fit.domain.auth.interceptor;
 
+import static eightplusone.bit.fit.global.constants.TokenConstant.*;
+
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpHeaders;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
@@ -20,7 +20,6 @@ import lombok.SneakyThrows;
 
 @Configuration
 @RequiredArgsConstructor
-@Order(Ordered.HIGHEST_PRECEDENCE + 99)
 public class WebSocketInterceptor implements ChannelInterceptor {
 
 	private final TokenProvider tokenProvider;
@@ -31,12 +30,13 @@ public class WebSocketInterceptor implements ChannelInterceptor {
 		StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
 
 		if (accessor.getCommand() == StompCommand.CONNECT) {
-			String authToken = accessor.getFirstNativeHeader(HttpHeaders.AUTHORIZATION);
+			String accessorFirstNativeHeader = accessor.getFirstNativeHeader(HttpHeaders.AUTHORIZATION);
+			String accessToken = accessorFirstNativeHeader.substring(BEARER_PREFIX.length());
 
-			if (!tokenProvider.validateAccessToken(authToken)) {
+			if (!tokenProvider.validateAccessToken(accessToken)) {
 				throw new CustomException(ErrorCode.INVALID_AUTH_TOKEN);
 			}
-			Authentication authentication = tokenProvider.getAuthenticationByAccessToken(authToken);
+			Authentication authentication = tokenProvider.getAuthenticationByAccessToken(accessToken);
 			accessor.setUser(authentication);
 		}
 		return message;
