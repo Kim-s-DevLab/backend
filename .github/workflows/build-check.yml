@@ -51,6 +51,15 @@ jobs:
           echo "MYSQL_USER=${{ secrets.MYSQL_USER }}" >> $GITHUB_ENV
           echo "MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}" >> $GITHUB_ENV
 
+      - name: Initialize MySQL User
+        run: |
+          docker exec $(docker ps -qf "ancestor=mysql:8.0") \
+          mysql -u root -proot -e "CREATE USER IF NOT EXISTS '${{ secrets.MYSQL_USER }}'@'%' IDENTIFIED BY '${{ secrets.MYSQL_PASSWORD }}';"
+          docker exec $(docker ps -qf "ancestor=mysql:8.0") \
+          mysql -u root -proot -e "GRANT ALL PRIVILEGES ON fit.* TO '${{ secrets.MYSQL_USER }}'@'%';"
+          docker exec $(docker ps -qf "ancestor=mysql:8.0") \
+          mysql -u root -proot -e "FLUSH PRIVILEGES;"
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
