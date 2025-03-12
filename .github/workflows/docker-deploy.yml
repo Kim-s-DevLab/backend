@@ -106,6 +106,32 @@ jobs:
             echo "SPRING_DATASOURCE_URL=${{ secrets.SPRING_DATASOURCE_URL }}" >> .env
             echo "SPRING_REDIS_HOST=${{ secrets.SPRING_REDIS_HOST }}" >> .env
             
+            if [ ! -f /home/ubuntu/docker-compose.yml ]; then
+              echo "docker-compose.yml not found! Copying from repo..."
+              scp -i ${{ secrets.EC2_SSH_KEY }} docker-compose.yml ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/
+            fi
+            
+            if ! docker ps --format '{{.Names}}' | grep -q 'mysql'; then
+              echo "Starting MySQL..."
+              docker-compose up -d mysql
+            fi
+
+            if ! docker ps --format '{{.Names}}' | grep -q 'redis'; then
+              echo "Starting Redis..."
+              docker-compose up -d redis
+            fi
+
+            if ! docker ps --format '{{.Names}}' | grep -q 'kurento'; then
+              echo "Starting Kurento..."
+              docker-compose up -d kurento
+            fi
+
+            if ! docker ps --format '{{.Names}}' | grep -q 'nginx'; then
+              echo "Starting Nginx..."
+              docker-compose up -d nginx
+            fi
+            
+            
             # 기존 컨테이너 종료 및 삭제
             echo "Stopping and removing the existing container..."
             docker stop green || true
