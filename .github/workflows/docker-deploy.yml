@@ -90,8 +90,6 @@ jobs:
             else
             echo "Nginx is already installed."
             fi
-            docker ps
-            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/fit:latest
             
             # 환경 변수 설정
             echo "Creating environment variables..."
@@ -120,76 +118,18 @@ jobs:
             add_env_var "SPRING_DATASOURCE_URL" "${{ secrets.SPRING_DATASOURCE_URL }}"
             add_env_var "SPRING_REDIS_HOST" "${{ secrets.SPRING_REDIS_HOST }}"
             
-            if ! docker network ls | grep -q "fit-network"; then
-              echo "Creating Docker network: fit-network"
-              docker network create fit-network
-            fi
+            # 기존 컨테이너 정리
+            sudo docker rm -f $(sudo docker ps -aq) # 모든 컨테이너를 강제로 제거
+            sudo docker network prune -f  # 사용되지 않는 네트워크 삭제
             
-            if ! docker ps --format '{{.Names}}' | grep -q 'mysql'; then
-              echo "Starting MySQL..."
-              docker-compose up -d mysql
-            fi
-
-            if ! docker ps --format '{{.Names}}' | grep -q 'redis'; then
-              echo "Starting Redis..."
-              docker-compose up -d redis
-            fi
-
-            if ! docker ps --format '{{.Names}}' | grep -q 'kurento'; then
-              echo "Starting Kurento..."
-              docker-compose up -d kurento
-            fi
-
-            if ! docker ps --format '{{.Names}}' | grep -q 'nginx'; then
-              echo "Starting Nginx..."
-              docker-compose up -d nginx
-            fi
+            docker ps
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/fit:latest
             
+            sudo docker-compose up -d
+            sudo docker image prune -f
             
-            # 기존 컨테이너 종료 및 삭제
-            echo "Stopping and removing the existing container..."
-            if docker ps -a --format '{{.Names}}' | grep -q green; then
-              echo "Stopping and removing the existing GREEN container..."
-              docker stop green
-              docker rm green
-            else
-              echo "No existing GREEN container found. Skipping removal."
-            fi
+            # Nginx 재시작
+            echo "Restarting Nginx..."
+            sudo systemctl restart nginx
             
-            check_container_running() {
-              local container_name=$1
-              if docker ps --format '{{.Names}}' | grep -q "$container_name"; then
-              echo "$container_name is running."
-              else
-              echo "ERROR: $container_name is not running!"
-              exit 1  # 컨테이너가 실행되지 않으면 배포 중단
-              fi
-            }
-            
-            # MySQL, Redis, Kurento, Nginx 실행 확인
-            check_container_running "mysql"
-            check_container_running "redis"
-            check_container_running "kurento"
-            check_container_running "nginx"
-            
-            # 새로운 컨테이너 실행 (보안 환경 변수 적용)
-            echo "Deploying new container as GREEN..."
-            docker run -d --name green --env-file .env --network fit-network -p 8082:8080 ${{ secrets.DOCKERHUB_USERNAME }}/fit:latest
-            
-            # 첫 배포 시 `green`을 기본으로 설정
-            if ! docker ps -a --format '{{.Names}}' | grep -q blue; then
-              echo "First deployment detected. Using GREEN as default container."
-              sudo sed -i 's/proxy_pass http:\/\/blue:8080;/proxy_pass http:\/\/green:8080;/' /etc/nginx/conf.d/app.conf
-            else
-              echo "Switching traffic to GREEN container..."
-              sudo sed -i 's/proxy_pass http:\/\/blue:8080;/proxy_pass http:\/\/green:8080;/' /etc/nginx/conf.d/app.conf
-            fi
-            
-            sudo systemctl reload nginx
-            
-            # 기존 컨테이너 정리 (1시간 후 삭제 -> 임시)
-            echo "Scheduling old BLUE container for cleanup in 1 hour..."
-            echo "docker stop blue && docker rm blue" | at now + 1 hour
-            
-            echo "Renaming GREEN container to BLUE..."
-            docker rename green blue
+            echo "Deployment completed successfully!"
