@@ -69,22 +69,6 @@ jobs:
           script: |
             echo "Connected to EC2!"
             
-            # Docker 그룹에 ubuntu 사용자 추가 (권한 문제 해결)
-            sudo usermod -aG docker ubuntu
-            newgrp docker  # 그룹 적용
-            
-            # Docker 설치 확인 및 설치
-            if ! command -v docker &> /dev/null
-            then
-            echo "Docker not found. Installing Docker..."
-            sudo apt update -y
-            sudo apt install -y docker.io
-            sudo systemctl enable docker
-            sudo systemctl start docker
-            else
-            echo "Docker is already installed."
-            fi
-            
             # 환경 변수 설정
             echo "Creating environment variables..."
 
@@ -107,14 +91,19 @@ jobs:
             add_env_var "SPRING_REDIS_HOST" "${{ secrets.SPRING_REDIS_HOST }}"
             add_env_var "DOCKERHUB_USERNAME" "${{ secrets.DOCKERHUB_USERNAME }}"
             
-            # 기존 컨테이너 정리
-            sudo docker rm -f $(sudo docker ps -aq) # 모든 컨테이너를 강제로 제거
+            echo "Stopping and removing old containers..."
+            sudo docker ps -aq | xargs -r sudo docker rm -f  # 실행 중인 컨테이너가 없으면 오류 방지
             sudo docker network prune -f  # 사용되지 않는 네트워크 삭제
             
-            docker ps
+            
+            echo "Pulling latest Docker image..."
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/fit:latest
             
             sudo docker-compose up -d
             sudo docker image prune -f
+            
+            # Nginx 재시작
+            echo "Restarting Nginx..."
+            sudo systemctl restart nginx
             
             echo "Deployment completed successfully!"
