@@ -99,7 +99,7 @@ jobs:
             echo "Pulling latest Docker image..."
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/fit:latest
             
-            sudo docker-compose up -d
+            sudo docker compose up -d
             sudo docker image prune -f
             
             # Nginx 재시작
