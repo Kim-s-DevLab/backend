@@ -1,9 +1,8 @@
 package eightplusone.bit.fit.global.exception;
 
-import org.springframework.http.HttpStatus;
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import org.springframework.http.HttpStatus;
 
 @Getter
 @AllArgsConstructor
@@ -13,6 +12,8 @@ public enum ErrorCode {
 	 * 400 BAD_REQUEST : 잘못된 요청
 	 */
 	INVALID_REQUEST(HttpStatus.BAD_REQUEST, "잘못된 요청입니다."),
+	MESSAGE_TOO_LONG(HttpStatus.BAD_REQUEST, "메시지가 너무 깁니다."),
+	INVALID_MESSAGE_FORMAT(HttpStatus.BAD_REQUEST, "잘못된 메시지 형식입니다."),
 
 	/**
 	 * 401 UNAUTHORIZED : 인증 되지 않은 사용자
@@ -30,6 +31,7 @@ public enum ErrorCode {
 	 */
 	USER_NOT_FOUND(HttpStatus.NOT_FOUND, "해당하는 정보의 사용자를 찾을 수 없습니다."),
 	RESOURCE_NOT_FOUND(HttpStatus.NOT_FOUND, "요청한 리소스를 찾을 수 없습니다."),
+	CHAT_SESSION_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 세션의 채팅을 찾을 수 없습니다."),
 
 	/**
 	 * 409 : CONFLICT : Resource 의 현재 상태와 충돌
@@ -37,7 +39,9 @@ public enum ErrorCode {
 	DUPLICATE_EMAIL(HttpStatus.CONFLICT, "이미 사용 중인 이메일 입니다."),
 	DUPLICATE_RESOURCE(HttpStatus.CONFLICT, "데이터가 이미 존재합니다."),
 	RESOURCE_CONFLICT(HttpStatus.CONFLICT, "리소스 상태와 충돌이 발생했습니다."),
-	OVER_VALIDATION(HttpStatus.CONFLICT,"더 이상 데이터를 저장 할 수 없습니다."),
+	OVER_VALIDATION(HttpStatus.CONFLICT, "더 이상 데이터를 저장 할 수 없습니다."),
+	DUPLICATE_LIKE(HttpStatus.CONFLICT, "이미 좋아요를 누른 메시지입니다."),
+	CANNOT_UNLIKE(HttpStatus.CONFLICT, "좋아요를 취소할 수 없는 메시지입니다."),
 
 	/**
 	 * 500 INTERNAL_SERVER_ERROR : 서버 오류
