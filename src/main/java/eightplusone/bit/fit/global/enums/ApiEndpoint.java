@@ -11,7 +11,10 @@ public enum ApiEndpoint {
 		"/swagger-ui/**",
 		"/actuator/**",
 		"/v3/**",
-		"/call"
+		"/call",
+		"/ws-chat",
+		"/ws-chat/**",
+		"/ws-room"
 	}),
 
 	PUBLIC_POST(HttpMethod.POST, new String[] {
