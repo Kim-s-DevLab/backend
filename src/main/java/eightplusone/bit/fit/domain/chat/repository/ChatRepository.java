@@ -43,4 +43,10 @@ public class ChatRepository {
 		redisTemplate.delete(chatKey);
 	}
 
+	// 채팅방이 존재하는지 확인
+	public boolean existsBySessionId(String sessionId) {
+		String chatKey = CHAT_LIST_KEY + sessionId;
+		return Boolean.TRUE.equals(redisTemplate.hasKey(chatKey));
+	}
+
 }
