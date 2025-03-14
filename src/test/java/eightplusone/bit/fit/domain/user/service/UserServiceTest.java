@@ -22,6 +22,7 @@ import eightplusone.bit.fit.domain.auth.service.OAuth2UnlinkService;
 import eightplusone.bit.fit.domain.auth.service.RedisTokenService;
 import eightplusone.bit.fit.domain.user.dto.UserAccountResponseDto;
 import eightplusone.bit.fit.domain.user.dto.UserProfileResponseDto;
+import eightplusone.bit.fit.domain.user.dto.UserProfileUpdateRequestDto;
 import eightplusone.bit.fit.domain.user.entity.User;
 import eightplusone.bit.fit.domain.user.repository.UserRepository;
 import eightplusone.bit.fit.support.fixture.UserFixture;
@@ -109,6 +110,33 @@ class UserServiceTest {
 			() -> assertThat(profileInfo.getJob()).isEqualTo(user.getJob()),
 			() -> assertThat(profileInfo.getYears()).isEqualTo(user.getYears()),
 			() -> assertThat(profileInfo.getInterests()).isEqualTo(user.getInterests())
+		);
+	}
+
+	@Test
+	@DisplayName("회원 개인 정보를 조회한다")
+	void userProfileUpdate() {
+		//given
+		User user = UserFixture.USER_FIXTURE_1.createUser();
+
+		SecurityContext context = SecurityContextHolder.createEmptyContext();
+		UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+			new CustomUserDetails(user), null, List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole())));
+		context.setAuthentication(authentication);
+		SecurityContextHolder.setContext(context);
+
+		Mockito.when(userRepository.findLoginUserByEmail(user.getEmail())).thenReturn(user);
+
+		UserProfileUpdateRequestDto userProfileUpdateRequestDto = UserProfileUpdateRequestDto.of("디자이너", 10, "css");
+
+		//when
+		userService.updateProfileInfo(userProfileUpdateRequestDto);
+
+		//then
+		assertAll(
+			() -> assertThat(user.getJob()).isEqualTo("디자이너"),
+			() -> assertThat(user.getYears()).isEqualTo(10),
+			() -> assertThat(user.getInterests()).isEqualTo("css")
 		);
 	}
 }

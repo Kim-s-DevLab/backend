@@ -34,6 +34,7 @@ public enum ApiEndpoint {
 	}),
 
 	AUTHENTICATED_PUT(HttpMethod.PUT, new String[] {
+		"/api/v1/users/profile"
 	}),
 
 	AUTHENTICATED_PATCH(HttpMethod.PATCH, new String[] {

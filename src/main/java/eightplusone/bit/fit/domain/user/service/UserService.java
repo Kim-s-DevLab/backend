@@ -8,6 +8,7 @@ import eightplusone.bit.fit.domain.auth.service.OAuth2UnlinkService;
 import eightplusone.bit.fit.domain.auth.service.RedisTokenService;
 import eightplusone.bit.fit.domain.user.dto.UserAccountResponseDto;
 import eightplusone.bit.fit.domain.user.dto.UserProfileResponseDto;
+import eightplusone.bit.fit.domain.user.dto.UserProfileUpdateRequestDto;
 import eightplusone.bit.fit.domain.user.entity.User;
 import eightplusone.bit.fit.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -48,5 +49,15 @@ public class UserService {
 		User user = userRepository.findLoginUserByEmail(
 			SecurityContextHolder.getContext().getAuthentication().getName());
 		return UserProfileResponseDto.of(user.getJob(), user.getYears(), user.getInterests());
+	}
+
+	@Transactional
+	public void updateProfileInfo(UserProfileUpdateRequestDto userProfileUpdateRequestDto) {
+		User user = userRepository.findLoginUserByEmail(
+			SecurityContextHolder.getContext().getAuthentication().getName());
+		user.updateProfileInfo(
+			userProfileUpdateRequestDto.getJob(),
+			userProfileUpdateRequestDto.getYears(),
+			userProfileUpdateRequestDto.getInterests());
 	}
 }

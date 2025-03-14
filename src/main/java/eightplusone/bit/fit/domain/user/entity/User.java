@@ -69,4 +69,10 @@ public class User extends BaseTimeEntity {
 			.role(role)
 			.build();
 	}
+
+	public void updateProfileInfo(String job, Integer years, String interests) {
+		this.job = job;
+		this.years = years;
+		this.interests = interests;
+	}
 }
