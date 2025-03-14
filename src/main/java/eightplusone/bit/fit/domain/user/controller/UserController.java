@@ -69,8 +69,8 @@ public class UserController {
 	@Operation(summary = "회원 개인 정보 업데이트", description = "**성공 응답 데이터:**  null")
 	@ApiResponses(value = {
 		@ApiResponse(responseCode = "200", description = "회원 개인 정보 업데이트 성공"),
+		@ApiResponse(responseCode = "400", description = "업데이트 필드 값 오류"),
 		@ApiResponse(responseCode = "401", description = "유효한 토큰이 아닙니다."),
-		@ApiResponse(responseCode = "404", description = "업데이트 필드 값 오류"),
 	})
 	@PutMapping("/profile")
 	public ResponseEntity<ResponseDto<Object>> updateProfile(
