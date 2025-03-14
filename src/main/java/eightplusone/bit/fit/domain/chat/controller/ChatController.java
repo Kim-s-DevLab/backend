@@ -60,12 +60,6 @@ public class ChatController {
 		chatService.unlikeMessage(userId, messageId);
 	}
 
-	// 좋아요 개수 조회
-	@GetMapping("/like/count/{messageId}")
-	public int getLikeCount(@PathVariable String messageId) {
-		return chatService.getLikeCount(messageId);
-	}
-
 	// 특정 세션의 QUESTION 메시지를 좋아요 순으로 정렬하여 반환
 	@GetMapping("/questions/{sessionId}")
 	public List<ChatMessageDto> getSortedQuestions(@PathVariable String sessionId) {
