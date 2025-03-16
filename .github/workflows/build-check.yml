@@ -53,7 +53,7 @@ jobs:
           echo "SPRING_PROFILES_ACTIVE=test" >> $GITHUB_ENV
 
       - name: Verify environment variables
-        run:
+        run: |
           echo "Active Profile: $SPRING_PROFILES_ACTIVE"
 
       - name: Initialize MySQL User
