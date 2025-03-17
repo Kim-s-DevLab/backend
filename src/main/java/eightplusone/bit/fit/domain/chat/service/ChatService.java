@@ -129,7 +129,7 @@ public class ChatService {
 		topLikedMessages.addAll(messages);
 
 		return topLikedMessages.stream()
-			.map(msg -> new ChatMessageDto(msg.getCategory(), msg.getMessage(),
+			.map(msg -> new ChatMessageDto(msg.getMessageId(), msg.getCategory(), msg.getMessage(),
 				userRedisRepository.getUserName(msg.getUserId())))
 			.collect(Collectors.toList());
 	}
