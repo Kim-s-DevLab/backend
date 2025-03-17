@@ -14,7 +14,7 @@ public final class CookieUtil {
 			.maxAge(cookieExpiration)
 			.path("/")
 			.sameSite("None")
-			.secure(false)
+			.secure(true)
 			.httpOnly(true)
 			.build();
 	}
