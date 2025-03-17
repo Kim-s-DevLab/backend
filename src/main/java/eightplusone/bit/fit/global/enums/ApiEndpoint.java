@@ -1,8 +1,7 @@
 package eightplusone.bit.fit.global.enums;
 
-import org.springframework.http.HttpMethod;
-
 import lombok.Getter;
+import org.springframework.http.HttpMethod;
 
 @Getter
 public enum ApiEndpoint {
@@ -12,9 +11,8 @@ public enum ApiEndpoint {
 		"/actuator/**",
 		"/v3/**",
 		"/call",
-		"/ws-chat",
-		"/ws-chat/**",
-		"/ws-room"
+		"/ws",
+		"/ws/**",
 	}),
 
 	PUBLIC_POST(HttpMethod.POST, new String[] {
