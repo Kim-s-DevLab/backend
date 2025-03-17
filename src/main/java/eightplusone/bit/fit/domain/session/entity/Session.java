@@ -13,11 +13,14 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
 @Table(name = "sessions")
+@NoArgsConstructor
 public class Session {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -46,4 +49,16 @@ public class Session {
 
 	@OneToMany(mappedBy = "session", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<MySession> mySessions = new ArrayList<>();
+
+	@Builder
+	public Session(String title, String sessionImage, String summary, LocalDateTime startTime, LocalDateTime endTime,
+		Integer standardCount, Integer audioChannel) {
+		this.title = title;
+		this.sessionImage = sessionImage;
+		this.summary = summary;
+		this.startTime = startTime;
+		this.endTime = endTime;
+		this.standardCount = standardCount;
+		this.audioChannel = audioChannel;
+	}
 }

@@ -30,7 +30,8 @@ public enum ApiEndpoint {
 	AUTHENTICATED_POST(HttpMethod.POST, new String[] {
 		"/api/v1/auth/logout",
 		"/api/v1/enter/checkin",
-		"/api/v1/enter/checkout"
+		"/api/v1/enter/checkout",
+		"/api/v1/users/sessions"
 	}),
 
 	AUTHENTICATED_PUT(HttpMethod.PUT, new String[] {
