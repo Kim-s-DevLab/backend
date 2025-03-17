@@ -3,6 +3,8 @@ package eightplusone.bit.fit.domain.mysession.service;
 import static org.assertj.core.api.AssertionsForClassTypes.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.List;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,8 +18,6 @@ import eightplusone.bit.fit.domain.session.entity.Session;
 import eightplusone.bit.fit.domain.session.repository.SessionRepository;
 import eightplusone.bit.fit.domain.user.entity.User;
 import eightplusone.bit.fit.domain.user.repository.UserRepository;
-import eightplusone.bit.fit.global.exception.CustomException;
-import eightplusone.bit.fit.global.exception.ErrorCode;
 import eightplusone.bit.fit.support.fixture.SessionFixture;
 import eightplusone.bit.fit.support.fixture.UserFixture;
 
@@ -47,8 +47,9 @@ class MySessionServiceTest {
 		mySessionService.registerMySession(user.getEmail(), session.getSessionId());
 
 		//then
-		MySession mySession = mySessionRepository.findSessionByUserId(user.getId())
-			.orElseThrow(() -> new CustomException(ErrorCode.RESOURCE_NOT_FOUND));
+		List<MySession> mySessions = mySessionRepository.findSessionsByUserIdAndType(user.getId(),
+			MySessionType.REGISTER);
+		MySession mySession = mySessions.get(0);
 		assertAll(
 			() -> assertThat(mySession.getType()).isEqualTo(MySessionType.REGISTER),
 			() -> assertThat(mySession.getSession().getSessionId()).isEqualTo(session.getSessionId()),
