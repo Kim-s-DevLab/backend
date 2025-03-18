@@ -28,10 +28,8 @@ public class ChatRepository {
 		redisTemplate.opsForList().rightPush(chatKey, message);
 		redisTemplate.expire(chatKey, Duration.ofHours(2)); // 2시간 후 만료
 
-		// 특정 채팅방의 메시지를 1000개만 유지
-		if (redisTemplate.opsForList().size(chatKey) > MAX_CHAT_SIZE) {
-			redisTemplate.opsForList().leftPop(chatKey);
-		}
+		// 리스트 크기를 1000개로 유지하도록 `trim()` 적용
+		redisTemplate.opsForList().trim(chatKey, -MAX_CHAT_SIZE, -1);
 	}
 
 	// 특정 채팅방(sessionId)의 최근 메시지 조회
