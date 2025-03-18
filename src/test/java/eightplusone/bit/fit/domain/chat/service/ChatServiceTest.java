@@ -54,7 +54,8 @@ class ChatServiceTest {
 			ChatCategory.GENERAL,
 			"Test message",
 			"Test User",
-			userId
+			userId,
+			sessionId
 		);
 
 		chatMessage = ChatMessage.builder()
@@ -161,9 +162,9 @@ class ChatServiceTest {
 		// Given
 		when(chatRepository.existsBySessionId("session1")).thenReturn(true);
 		when(chatRepository.getRecentMessages("session1")).thenReturn(Arrays.asList(
-			new ChatMessageDto("msg1", ChatCategory.QUESTION, "Question 1", "Alice", "user1"),
-			new ChatMessageDto("msg2", ChatCategory.QUESTION, "Question 2", "Bob", "user2"),
-			new ChatMessageDto("msg3", ChatCategory.GENERAL, "General message", "Charlie", "user3")
+			new ChatMessageDto("msg1", ChatCategory.QUESTION, "Question 1", "Alice", "user1", "1"),
+			new ChatMessageDto("msg2", ChatCategory.QUESTION, "Question 2", "Bob", "user2", "1"),
+			new ChatMessageDto("msg3", ChatCategory.GENERAL, "General message", "Charlie", "user3", "1")
 		));
 
 		when(chatLikeRepository.getLikeCount("like:msg1")).thenReturn(10);

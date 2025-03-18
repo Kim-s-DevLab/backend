@@ -165,7 +165,8 @@ public class ChatService {
 					msg.getCategory(),
 					msg.getMessage(),
 					userName != null ? userName : "알 수 없음", // ✅ `null`이면 기본값 설정
-					msg.getUserId() // `userId`가 `null`이 아닌지 확인
+					msg.getUserId(), // `userId`가 `null`이 아닌지 확인
+					msg.getSessionId()
 				);
 			})
 			.collect(Collectors.toList());
