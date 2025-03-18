@@ -11,7 +11,6 @@ import eightplusone.bit.fit.domain.user.repository.UserRedisRepository;
 import eightplusone.bit.fit.domain.user.repository.UserRepository;
 import eightplusone.bit.fit.global.exception.CustomException;
 import eightplusone.bit.fit.global.exception.ErrorCode;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -123,7 +122,7 @@ public class ChatService {
 			.map(obj -> {
 				if (obj instanceof ChatMessageDto dto) {
 					return new ChatMessage(dto.getMessageId(), sessionId, dto.getUserId(), dto.getCategory(),
-						dto.getMessage(), LocalDateTime.now().toString());
+						dto.getMessage(), dto.getTimestamp());
 				} else if (obj instanceof ChatMessage message) {
 					return message;  // 기존 ChatMessage 객체 그대로 사용
 				}
@@ -164,9 +163,10 @@ public class ChatService {
 					msg.getMessageId(),
 					msg.getCategory(),
 					msg.getMessage(),
-					userName != null ? userName : "알 수 없음", // ✅ `null`이면 기본값 설정
+					userName != null ? userName : "알 수 없음", // `null`이면 기본값 설정
 					msg.getUserId(), // `userId`가 `null`이 아닌지 확인
-					msg.getSessionId()
+					msg.getSessionId(),
+					msg.getTimestamp()
 				);
 			})
 			.collect(Collectors.toList());
