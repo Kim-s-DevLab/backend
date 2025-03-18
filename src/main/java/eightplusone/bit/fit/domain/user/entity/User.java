@@ -1,7 +1,11 @@
 package eightplusone.bit.fit.domain.user.entity;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import eightplusone.bit.fit.domain.auth.enums.Role;
 import eightplusone.bit.fit.global.base.BaseTimeEntity;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -9,6 +13,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -40,9 +45,6 @@ public class User extends BaseTimeEntity {
 	@Column(name = "years")
 	private Integer years;
 
-	@Column(name = "interests", length = 30)
-	private String interests;
-
 	@Column(name = "image", length = 200)
 	private String image;
 
@@ -50,8 +52,12 @@ public class User extends BaseTimeEntity {
 	@Column(name = "role", length = 20, nullable = false)
 	private Role role;
 
+	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<Interest> interests = new ArrayList<>();
+
 	@Builder
-	private User(String email, String name, String provider, String job, Integer years, String interests, Role role) {
+	private User(String email, String name, String provider, String job, Integer years, Role role,
+		List<Interest> interests) {
 		this.email = email;
 		this.name = name;
 		this.provider = provider;
@@ -70,9 +76,14 @@ public class User extends BaseTimeEntity {
 			.build();
 	}
 
-	public void updateProfileInfo(String job, Integer years, String interests) {
+	public void updateProfileInfo(String job, Integer years, List<Interest> interests) {
 		this.job = job;
 		this.years = years;
-		this.interests = interests;
+		setInterests(interests);
+	}
+
+	private void setInterests(List<Interest> interests) {
+		this.interests.clear();
+		interests.forEach(interest -> interest.setUser(this));
 	}
 }

@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -23,6 +24,7 @@ import eightplusone.bit.fit.domain.auth.service.RedisTokenService;
 import eightplusone.bit.fit.domain.user.dto.UserAccountResponseDto;
 import eightplusone.bit.fit.domain.user.dto.UserProfileResponseDto;
 import eightplusone.bit.fit.domain.user.dto.UserProfileUpdateRequestDto;
+import eightplusone.bit.fit.domain.user.entity.Interest;
 import eightplusone.bit.fit.domain.user.entity.User;
 import eightplusone.bit.fit.domain.user.repository.UserRepository;
 import eightplusone.bit.fit.support.fixture.UserFixture;
@@ -100,16 +102,20 @@ class UserServiceTest {
 		context.setAuthentication(authentication);
 		SecurityContextHolder.setContext(context);
 
-		Mockito.when(userRepository.findLoginUserByEmail(user.getEmail())).thenReturn(user);
+		Mockito.when(userRepository.findLoginUserByEmailWithInterest(user.getEmail())).thenReturn(user);
 
 		//when
 		UserProfileResponseDto profileInfo = userService.getProfileInfo();
 
 		//then
+		List<String> expectedInterests = user.getInterests().stream()
+			.map(Interest::getName)
+			.collect(Collectors.toList());
+
 		assertAll(
 			() -> assertThat(profileInfo.getJob()).isEqualTo(user.getJob()),
 			() -> assertThat(profileInfo.getYears()).isEqualTo(user.getYears()),
-			() -> assertThat(profileInfo.getInterests()).isEqualTo(user.getInterests())
+			() -> assertThat(profileInfo.getInterests()).isEqualTo(expectedInterests)
 		);
 	}
 
@@ -125,18 +131,23 @@ class UserServiceTest {
 		context.setAuthentication(authentication);
 		SecurityContextHolder.setContext(context);
 
-		Mockito.when(userRepository.findLoginUserByEmail(user.getEmail())).thenReturn(user);
+		Mockito.when(userRepository.findLoginUserByEmailWithInterest(user.getEmail())).thenReturn(user);
 
-		UserProfileUpdateRequestDto userProfileUpdateRequestDto = UserProfileUpdateRequestDto.of("디자이너", 10, "css");
+		UserProfileUpdateRequestDto userProfileUpdateRequestDto = UserProfileUpdateRequestDto.of("디자이너", 10,
+			List.of("HTML", "CSS", "JS"));
 
 		//when
 		userService.updateProfileInfo(userProfileUpdateRequestDto);
 
 		//then
+		List<String> expectedInterests = user.getInterests().stream()
+			.map(Interest::getName)
+			.collect(Collectors.toList());
+		
 		assertAll(
 			() -> assertThat(user.getJob()).isEqualTo("디자이너"),
 			() -> assertThat(user.getYears()).isEqualTo(10),
-			() -> assertThat(user.getInterests()).isEqualTo("css")
+			() -> assertThat(expectedInterests).isEqualTo(userProfileUpdateRequestDto.getInterests())
 		);
 	}
 }
