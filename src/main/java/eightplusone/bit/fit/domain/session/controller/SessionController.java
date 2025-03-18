@@ -2,8 +2,9 @@ package eightplusone.bit.fit.domain.session.controller;
 
 import static org.springframework.http.HttpStatus.*;
 
-import java.util.List;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -29,8 +30,8 @@ public class SessionController {
 		@ApiResponse(responseCode = "200", description = "세션 전체 조회 성공"),
 	})
 	@GetMapping("/all")
-	public ResponseEntity<ResponseDto<List<SessionListResponseDto>>> all() {
+	public ResponseEntity<ResponseDto<Page<SessionListResponseDto>>> all(@PageableDefault(size = 9) Pageable pageable) {
 		return ResponseEntity.status(OK)
-			.body(ResponseDto.success(OK, "세션 전체 리스트 조회 성공", sessionService.getSessionsList()));
+			.body(ResponseDto.success(OK, "세션 전체 리스트 조회 성공", sessionService.getSessionsList(pageable)));
 	}
 }

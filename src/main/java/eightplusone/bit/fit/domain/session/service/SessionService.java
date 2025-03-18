@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -103,20 +105,18 @@ public class SessionService {
 		}
 	}
 
-	public List<SessionListResponseDto> getSessionsList() {
-		List<Session> sessions = sessionRepository.findAll();
+	public Page<SessionListResponseDto> getSessionsList(Pageable pageable) {
+		Page<Session> sessions = sessionRepository.findAll(pageable);
 
-		return sessions.stream()
-			.map(session -> {
-				Speaker speaker = speakerRepository.findBySession_SessionId(session.getSessionId());
-				Tag tag = tagRepository.findBySession_SessionId(session.getSessionId());
+		return sessions.map(session -> {
+			Speaker speaker = speakerRepository.findBySession_SessionId(session.getSessionId());
+			Tag tag = tagRepository.findBySession_SessionId(session.getSessionId());
 
-				return SessionListResponseDto.from(
-					session,
-					SpeakerResponseDto.from(speaker),
-					TagResponseDto.from(tag)
-				);
-			})
-			.collect(Collectors.toList());
+			return SessionListResponseDto.from(
+				session,
+				SpeakerResponseDto.from(speaker),
+				TagResponseDto.from(tag)
+			);
+		});
 	}
 }
