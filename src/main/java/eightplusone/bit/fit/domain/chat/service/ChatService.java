@@ -139,8 +139,8 @@ public class ChatService {
 
 		List<ChatMessage> topLikedMessages = messages.stream()
 			.sorted((m1, m2) -> {
-				int likeCount1 = getLikeCount(m1.getMessageId());
-				int likeCount2 = getLikeCount(m2.getMessageId());
+				int likeCount1 = getLikeCount("like:" + m1.getMessageId());
+				int likeCount2 = getLikeCount("like:" + m2.getMessageId());
 
 				log.info("💡 정렬 중: {} ({}개) vs {} ({}개)", m1.getMessageId(), likeCount1, m2.getMessageId(), likeCount2);
 
@@ -153,9 +153,22 @@ public class ChatService {
 		topLikedMessages.addAll(messages);
 
 		return topLikedMessages.stream()
-			.map(msg -> new ChatMessageDto(msg.getMessageId(), msg.getCategory(), msg.getMessage(),
-				userRedisRepository.getUserName(msg.getUserId()), msg.getUserId())) // ✅ userId 포함
+			.map(msg -> {
+				log.info("🔍 메시지 ID: {}, UserID: {}", msg.getMessageId(), msg.getUserId());
+				String userName = userRedisRepository.getUserName(msg.getUserId());
+
+				log.info("🔍 userRedisRepository.getUserName({}) → {}", msg.getUserId(), userName);
+
+				return new ChatMessageDto(
+					msg.getMessageId(),
+					msg.getCategory(),
+					msg.getMessage(),
+					userName != null ? userName : "알 수 없음", // ✅ `null`이면 기본값 설정
+					msg.getUserId() // ✅ `userId`가 `null`이 아닌지 확인
+				);
+			})
 			.collect(Collectors.toList());
+
 	}
 
 }
