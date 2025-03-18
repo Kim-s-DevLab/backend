@@ -1,6 +1,16 @@
 package eightplusone.bit.fit.domain.auth.filter;
 
+import java.io.IOException;
+import java.util.Arrays;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.filter.OncePerRequestFilter;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import eightplusone.bit.fit.domain.auth.jwt.TokenProvider;
 import eightplusone.bit.fit.global.dto.ResponseDto;
 import eightplusone.bit.fit.global.enums.ApiEndpoint;
@@ -9,15 +19,8 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.Arrays;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.filter.OncePerRequestFilter;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -70,12 +73,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	protected boolean shouldNotFilter(HttpServletRequest request) {
 		String requestUri = request.getRequestURI();
 		String upgradeHeader = request.getHeader("Upgrade");
-		String requestUrl = request.getRequestURL().toString();
-
-		if (requestUri.startsWith("/ws") || requestUri.startsWith("/sub/session") || requestUrl.startsWith(
-			"https://jiangxy.github.io")) { // TODO : 마지막 조건문 삭제
-			return true;
-		} // 혼잡도 관련 -> 토큰 인증 X
 
 		return Arrays.stream(ApiEndpoint.values())
 			.filter(endpoint -> endpoint.name().startsWith("PUBLIC_"))
@@ -83,9 +80,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			.map(path -> path.replace("**", ".*"))
 			.anyMatch(requestUri::matches)
 			|| (upgradeHeader != null && upgradeHeader.equalsIgnoreCase("websocket")
-			|| requestUri.startsWith("/ws")
-			|| requestUri.startsWith("/sub/session")
-			|| requestUrl.startsWith("https://jiangxy.github.io") // TODO : 마지막 조건문 삭제
 		);
 	}
 }
