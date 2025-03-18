@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import eightplusone.bit.fit.domain.auth.enums.Role;
+import eightplusone.bit.fit.domain.mysession.entity.MySession;
 import eightplusone.bit.fit.global.base.BaseTimeEntity;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -51,6 +52,9 @@ public class User extends BaseTimeEntity {
 	@Enumerated(EnumType.STRING)
 	@Column(name = "role", length = 20, nullable = false)
 	private Role role;
+
+	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<MySession> mySessions = new ArrayList<>();
 
 	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<Interest> interests = new ArrayList<>();

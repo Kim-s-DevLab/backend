@@ -73,12 +73,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	protected boolean shouldNotFilter(HttpServletRequest request) {
 		String requestUri = request.getRequestURI();
 		String upgradeHeader = request.getHeader("Upgrade");
-		String requestUrl = request.getRequestURL().toString();
-
-		if (requestUri.startsWith("/ws-room") || requestUri.startsWith("/sub/session") || requestUrl.startsWith(
-			"https://jiangxy.github.io") || requestUri.startsWith("/ws-chat")) { // TODO : 마지막 조건문 삭제
-			return true;
-		} // 혼잡도 관련 -> 토큰 인증 X
 
 		return Arrays.stream(ApiEndpoint.values())
 			.filter(endpoint -> endpoint.name().startsWith("PUBLIC_"))
@@ -86,9 +80,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			.map(path -> path.replace("**", ".*"))
 			.anyMatch(requestUri::matches)
 			|| (upgradeHeader != null && upgradeHeader.equalsIgnoreCase("websocket")
-			|| requestUri.startsWith("/ws-room")
-			|| requestUri.startsWith("/sub/session")
-			|| requestUrl.startsWith("https://jiangxy.github.io") // TODO : 마지막 조건문 삭제
 		);
 	}
 }
