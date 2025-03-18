@@ -26,8 +26,8 @@ public class UserProfileUpdateRequestDto {
 	@Schema(description = "연차", example = "1")
 	private Integer years;
 
-	@NotEmpty(message = "관심 분야를 최소 1개 이상 입력해야 합니다.")
-	@Size(min = 1, max = 3, message = "관심 분야는 최대 3개까지 입력 가능합니다.")
+	@NotEmpty(message = "관심 분야가 되지않았습니다.")
+	@Size(min = 3, max = 3, message = "관심 분야는 3개 선택해야 합니다.")
 	@Schema(description = "사용자의 관심 분야 목록", example = "[\"클라우드\", \"데이터베이스\", \"자바스크립트\"]")
 	private List<String> interests;
 

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import eightplusone.bit.fit.domain.auth.enums.Role;
+import eightplusone.bit.fit.domain.interest.entity.MyInterest;
 import eightplusone.bit.fit.domain.mysession.entity.MySession;
 import eightplusone.bit.fit.global.base.BaseTimeEntity;
 import jakarta.persistence.CascadeType;
@@ -57,17 +58,15 @@ public class User extends BaseTimeEntity {
 	private List<MySession> mySessions = new ArrayList<>();
 
 	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-	private List<Interest> interests = new ArrayList<>();
+	private List<MyInterest> myInterests = new ArrayList<>();
 
 	@Builder
-	private User(String email, String name, String provider, String job, Integer years, Role role,
-		List<Interest> interests) {
+	private User(String email, String name, String provider, String job, Integer years, Role role) {
 		this.email = email;
 		this.name = name;
 		this.provider = provider;
 		this.job = job;
 		this.years = years;
-		this.interests = interests;
 		this.role = role;
 	}
 
@@ -80,14 +79,8 @@ public class User extends BaseTimeEntity {
 			.build();
 	}
 
-	public void updateProfileInfo(String job, Integer years, List<Interest> interests) {
+	public void updateProfileInfo(String job, Integer years) {
 		this.job = job;
 		this.years = years;
-		setInterests(interests);
-	}
-
-	private void setInterests(List<Interest> interests) {
-		this.interests.clear();
-		interests.forEach(interest -> interest.setUser(this));
 	}
 }

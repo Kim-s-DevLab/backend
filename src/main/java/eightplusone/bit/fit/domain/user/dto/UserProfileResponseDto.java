@@ -2,7 +2,7 @@ package eightplusone.bit.fit.domain.user.dto;
 
 import java.util.List;
 
-import eightplusone.bit.fit.domain.user.entity.Interest;
+import eightplusone.bit.fit.domain.interest.entity.MyInterest;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
@@ -15,7 +15,7 @@ public class UserProfileResponseDto {
 	private final String job;
 	@Schema(description = "연차", example = "1")
 	private final Integer years;
-	@Schema(description = "사용자의 관심 분야 목록", example = "[\"클라우드\", \"데이터베이스\", \"자바스크립트\"]")
+	@Schema(description = "사용자의 관심 분야", example = "[\"클라우드\", \"데이터베이스\", \"자바스크립트\"]")
 	private final List<String> interests;
 
 	@Builder
@@ -25,11 +25,11 @@ public class UserProfileResponseDto {
 		this.interests = interests;
 	}
 
-	public static UserProfileResponseDto of(String job, Integer years, List<Interest> interests) {
+	public static UserProfileResponseDto of(String job, Integer years, List<MyInterest> myInterests) {
 		return UserProfileResponseDto.builder()
 			.job(job)
 			.years(years)
-			.interests(interests.stream().map(Interest::getName).toList())
+			.interests(myInterests.stream().map(myInterest -> myInterest.getInterest().getName()).toList())
 			.build();
 	}
 }

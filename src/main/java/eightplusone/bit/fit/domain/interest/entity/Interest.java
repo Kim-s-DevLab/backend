@@ -1,19 +1,15 @@
-package eightplusone.bit.fit.domain.user.entity;
+package eightplusone.bit.fit.domain.interest.entity;
 
-import static jakarta.persistence.FetchType.*;
-
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -30,13 +26,11 @@ public class Interest {
 	@Column(name = "interest_id")
 	private Long id;
 
-	@Column(name = "name", nullable = false, length = 30)
+	@Column(name = "name", nullable = false, length = 50)
 	private String name;
 
-	@JsonIgnore
-	@ManyToOne(fetch = LAZY)
-	@JoinColumn(name = "user_id")
-	private User user;
+	@OneToMany(mappedBy = "interest", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<MyInterest> myInterests = new ArrayList<>();
 
 	@Builder
 	private Interest(String name) {
@@ -47,16 +41,5 @@ public class Interest {
 		return Interest.builder()
 			.name(name)
 			.build();
-	}
-
-	public static List<Interest> from(List<String> names) {
-		return names.stream()
-			.map(Interest::of)
-			.collect(Collectors.toList());
-	}
-
-	protected void setUser(User user) {
-		this.user = user;
-		user.getInterests().add(this);
 	}
 }
