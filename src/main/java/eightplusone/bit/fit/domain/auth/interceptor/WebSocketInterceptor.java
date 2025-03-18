@@ -30,6 +30,16 @@ public class WebSocketInterceptor implements ChannelInterceptor {
 		StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
 
 		if (accessor.getCommand() == StompCommand.CONNECT) {
+			return message;
+		}
+
+		if (accessor.getCommand() == StompCommand.SUBSCRIBE || accessor.getCommand() == StompCommand.SEND) {
+			String destination = accessor.getDestination();
+
+			if (destination != null && destination.startsWith("/sub/session")) {
+				return message;
+			}
+
 			String accessorFirstNativeHeader = accessor.getFirstNativeHeader(HttpHeaders.AUTHORIZATION);
 			String accessToken = accessorFirstNativeHeader.substring(BEARER_PREFIX.length());
 
