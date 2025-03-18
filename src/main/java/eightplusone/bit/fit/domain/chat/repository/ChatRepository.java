@@ -26,7 +26,14 @@ public class ChatRepository {
 		String chatKey = CHAT_LIST_KEY + message.getSessionId();
 
 		redisTemplate.opsForList().rightPush(chatKey, message);
-		redisTemplate.expire(chatKey, Duration.ofHours(2)); // 2시간 후 만료
+		// redisTemplate.expire(chatKey, Duration.ofHours(2)); // 2시간 후 만료
+
+		// TTL이 설정되었는지 확인하기 위해 직접 로그 출력
+		Boolean expireResult = redisTemplate.expire(chatKey, Duration.ofHours(2));
+		log.info("🔍 TTL 적용 결과 (true: 성공, false: 실패): {}", expireResult);
+
+		Long ttl = redisTemplate.getExpire(chatKey);
+		log.info("🔍 현재 TTL 값 (초 단위): {}", ttl);
 
 		// 리스트 크기를 1000개로 유지하도록 `trim()` 적용
 		redisTemplate.opsForList().trim(chatKey, -MAX_CHAT_SIZE, -1);
