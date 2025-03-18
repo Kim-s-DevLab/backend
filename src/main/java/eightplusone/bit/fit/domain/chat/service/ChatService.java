@@ -120,8 +120,19 @@ public class ChatService {
 			.filter(msg -> msg.getCategory() == ChatCategory.QUESTION)
 			.collect(Collectors.toList());
 
+		// 💡 가져온 메시지 개수 확인 로그
+		log.info("💬 세션 [{}]에서 가져온 메시지 개수: {}", sessionId, messages.size());
+
 		List<ChatMessage> topLikedMessages = messages.stream()
-			.sorted((m1, m2) -> Integer.compare(getLikeCount(m2.getMessageId()), getLikeCount(m1.getMessageId())))
+			// .sorted((m1, m2) -> Integer.compare(getLikeCount(m2.getMessageId()), getLikeCount(m1.getMessageId())))
+			.sorted((m1, m2) -> {
+				int likeCount1 = getLikeCount(m1.getMessageId());
+				int likeCount2 = getLikeCount(m2.getMessageId());
+
+				log.info("💡 정렬 중: {} ({}개) vs {} ({}개)", m1.getMessageId(), likeCount1, m2.getMessageId(), likeCount2);
+
+				return Integer.compare(likeCount2, likeCount1); // 내림차순 정렬
+			})
 			.limit(3)
 			.collect(Collectors.toList());
 
@@ -129,7 +140,7 @@ public class ChatService {
 		topLikedMessages.addAll(messages);
 
 		return topLikedMessages.stream()
-			.map(msg -> new ChatMessageDto(msg.getCategory(), msg.getMessage(),
+			.map(msg -> new ChatMessageDto(msg.getMessageId(), msg.getCategory(), msg.getMessage(),
 				userRedisRepository.getUserName(msg.getUserId())))
 			.collect(Collectors.toList());
 	}
