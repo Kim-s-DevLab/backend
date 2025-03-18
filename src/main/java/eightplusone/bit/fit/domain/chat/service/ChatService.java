@@ -118,13 +118,14 @@ public class ChatService {
 		List<Object> rawMessages = chatRepository.getRecentMessages(sessionId);
 		log.info("🔍 Redis에서 가져온 원본 메시지: {}", rawMessages);
 
-		// ✅ ChatMessageDto -> ChatMessage 변환 (userId 추가)
+		// ChatMessageDto -> ChatMessage 변환 (userId 추가)
 		List<ChatMessage> messages = rawMessages.stream()
 			.map(obj -> {
 				if (obj instanceof ChatMessageDto dto) {
-					log.info("🔄 ChatMessageDto → ChatMessage 변환: {}", dto);
 					return new ChatMessage(dto.getMessageId(), sessionId, dto.getUserId(), dto.getCategory(),
 						dto.getMessage(), LocalDateTime.now().toString());
+				} else if (obj instanceof ChatMessage message) {
+					return message;  // 기존 ChatMessage 객체 그대로 사용
 				}
 				log.warn("❌ 변환 실패: {}", obj);
 				return null;
@@ -134,7 +135,7 @@ public class ChatService {
 			.filter(msg -> msg.getCategory() == ChatCategory.QUESTION)
 			.collect(Collectors.toList());
 
-		// 💡 가져온 메시지 개수 확인 로그
+		// 가져온 메시지 개수 확인 로그
 		log.info("💬 세션 [{}]에서 가져온 QUESTION 메시지 개수: {}", sessionId, messages.size());
 
 		List<ChatMessage> topLikedMessages = messages.stream()
@@ -164,7 +165,7 @@ public class ChatService {
 					msg.getCategory(),
 					msg.getMessage(),
 					userName != null ? userName : "알 수 없음", // ✅ `null`이면 기본값 설정
-					msg.getUserId() // ✅ `userId`가 `null`이 아닌지 확인
+					msg.getUserId() // `userId`가 `null`이 아닌지 확인
 				);
 			})
 			.collect(Collectors.toList());
