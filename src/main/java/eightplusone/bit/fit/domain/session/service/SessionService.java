@@ -86,7 +86,7 @@ public class SessionService {
 
 		if (!newLevel.equals(previousLevel)) {
 			hashOps.put(SESSION_CONGESTION_KEY, audioChannel.toString(), newLevel);
-			redisTemplate.convertAndSend("/sub/ws-room", Map.of(
+			redisTemplate.convertAndSend("/sub/session", Map.of(
 				"sessionId", audioChannel,
 				"percent", percent,
 				"level", newLevel

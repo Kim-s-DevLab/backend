@@ -9,21 +9,23 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 public class ChatMessageDto {
+	private String messageId;
 	private ChatCategory category;
 	private String message;
 	private String name;
+	private String userId;
 
 	@JsonCreator
-	public ChatMessageDto(@JsonProperty("category") ChatCategory category,
-		@JsonProperty("message") String message) {
-		this.category = category;
-		this.message = message;
-	}
-
-	@JsonCreator
-	public ChatMessageDto(ChatCategory category, String message, String name) {
+	public ChatMessageDto(
+		@JsonProperty("messageId") String messageId,
+		@JsonProperty("category") ChatCategory category,
+		@JsonProperty("message") String message,
+		@JsonProperty("name") String name,
+		@JsonProperty("userId") String userId) {
+		this.messageId = messageId;
 		this.category = category;
 		this.message = message;
 		this.name = name;
+		this.userId = userId;
 	}
 }
