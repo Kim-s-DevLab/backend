@@ -15,9 +15,10 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.listener.PatternTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
-import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
+import eightplusone.bit.fit.domain.chat.dto.ChatMessageDto;
 import eightplusone.bit.fit.global.pubsub.ChatSubscriber;
 import io.lettuce.core.ClientOptions;
 import io.lettuce.core.SocketOptions;
@@ -61,34 +62,17 @@ public class RedisConfig {
 		return new LettuceConnectionFactory(redisConfig, clientConfig);
 	}
 
-	// @Bean
-	// public RedisTemplate<String, Object> redisTemplate() {
-	// 	RedisTemplate<String, Object> template = new RedisTemplate<>();
-	// 	Jackson2JsonRedisSerializer<ChatMessageDto> serializer = new Jackson2JsonRedisSerializer<>(
-	// 		ChatMessageDto.class);
-	// 	template.setConnectionFactory(redisConnectionFactory());
-	// 	template.setKeySerializer(new StringRedisSerializer());
-	// 	template.setValueSerializer(serializer);
-	// 	template.setHashKeySerializer(new StringRedisSerializer());
-	// 	template.setHashValueSerializer(new StringRedisSerializer());
-	// 	template.afterPropertiesSet();
-	// 	return template;
-	// }
-
 	@Bean
-	public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory redisConnectionFactory) {
+	public RedisTemplate<String, Object> redisTemplate() {
 		RedisTemplate<String, Object> template = new RedisTemplate<>();
-
-		// 다양한 객체를 저장할 수 있도록 GenericJackson2JsonRedisSerializer 사용
-		GenericJackson2JsonRedisSerializer jsonSerializer = new GenericJackson2JsonRedisSerializer();
-
-		template.setConnectionFactory(redisConnectionFactory);
+		Jackson2JsonRedisSerializer<ChatMessageDto> serializer = new Jackson2JsonRedisSerializer<>(
+			ChatMessageDto.class);
+		template.setConnectionFactory(redisConnectionFactory());
 		template.setKeySerializer(new StringRedisSerializer());
-		template.setValueSerializer(jsonSerializer);
+		template.setValueSerializer(serializer);
 		template.setHashKeySerializer(new StringRedisSerializer());
-		template.setHashValueSerializer(jsonSerializer);
+		template.setHashValueSerializer(new StringRedisSerializer());
 		template.afterPropertiesSet();
-
 		return template;
 	}
 
