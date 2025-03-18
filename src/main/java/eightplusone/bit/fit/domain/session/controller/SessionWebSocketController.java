@@ -22,6 +22,6 @@ public class SessionWebSocketController {
 	public void broadcastSessionUpdate() {
 		Map<Integer, Map<String, Object>> sessionData = sessionService.getUpdatedSessionData();
 		log.info("send congestion data : {}", sessionData.toString());
-		messagingTemplate.convertAndSend("/sub/ws-room", sessionData);
+		messagingTemplate.convertAndSend("/sub/session", sessionData);
 	}
 }

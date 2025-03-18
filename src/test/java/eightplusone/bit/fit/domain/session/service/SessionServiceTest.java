@@ -103,7 +103,7 @@ class SessionServiceTest {
 
 		// Then
 		verify(hashOperations).put("session_congestion", audioChannel.toString(), newLevel);
-		verify(redisTemplate).convertAndSend(eq("/sub/ws-room"), argThat(message -> {
+		verify(redisTemplate).convertAndSend(eq("/sub/session"), argThat(message -> {
 			Map<String, Object> msg = (Map<String, Object>)message;
 			return msg.get("sessionId").equals(audioChannel) &&
 				msg.get("percent").equals(percent) &&

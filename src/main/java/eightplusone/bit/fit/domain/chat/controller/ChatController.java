@@ -3,6 +3,11 @@ package eightplusone.bit.fit.domain.chat.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import eightplusone.bit.fit.domain.chat.dto.ChatMessageDto;
 import eightplusone.bit.fit.domain.chat.service.ChatService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -18,7 +23,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/chat")
+@RequestMapping("/api/v1/chat")
+@Tag(name = "Chat API", description = "채팅 관련 API")
 public class ChatController {
 	private final ChatService chatService;
 
@@ -26,44 +32,60 @@ public class ChatController {
 		this.chatService = chatService;
 	}
 
-	// Redis 로 발행
+	@Operation(summary = "메시지 전송", description = "특정 채팅 세션에 메시지를 전송합니다.")
 	@MessageMapping("/chat/{sessionId}")
-	public void sendMessage(@DestinationVariable("sessionId") String sessionId,
+	public void sendMessage(
+		@Parameter(description = "채팅 세션 ID", example = "1234") @DestinationVariable("sessionId") String sessionId,
 		@Payload ChatMessageDto message,
-		@Header("User-Id") String userId) throws JsonProcessingException {
+		@Parameter(description = "사용자 ID", example = "user123") @Header("User-Id") String userId
+	) throws JsonProcessingException {
 		chatService.sendMessage(message, userId, sessionId);
 	}
 
-	// 특정 채팅방의 최근 메시지 조회
+	@Operation(summary = "최근 메시지 조회", description = "특정 채팅방의 최근 메시지를 조회합니다.")
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "성공적으로 메시지를 반환함")
+	})
 	@GetMapping("/{sessionId}/messages")
-	public ResponseEntity<List<Object>> getRecentMessages(@PathVariable String sessionId) {
+	public ResponseEntity<List<Object>> getRecentMessages(
+		@Parameter(description = "채팅 세션 ID", example = "1234") @PathVariable String sessionId
+	) {
 		List<Object> messages = chatService.getRecentMessages(sessionId);
 		return ResponseEntity.ok(messages);
 	}
 
-	// 특정 채팅방 데이터 삭제 (강연 종료 후)
+	@Operation(summary = "채팅 데이터 삭제", description = "특정 채팅방의 데이터를 삭제합니다. (강연 종료 후)")
 	@DeleteMapping("/{sessionId}/clear")
-	public ResponseEntity<String> clearChat(@PathVariable String sessionId) {
+	public ResponseEntity<String> clearChat(
+		@Parameter(description = "채팅 세션 ID", example = "1234") @PathVariable String sessionId
+	) {
 		chatService.clearChat(sessionId);
 		return ResponseEntity.ok("Chat history cleared for session: " + sessionId);
 	}
 
-	// 좋아요 추가
+	@Operation(summary = "메시지 좋아요", description = "특정 메시지에 좋아요를 추가합니다.")
 	@PostMapping("/like/{messageId}")
-	public void likeMessage(@PathVariable String messageId, @RequestParam String userId) {
+	public void likeMessage(
+		@Parameter(description = "메시지 ID", example = "msg123") @PathVariable String messageId,
+		@Parameter(description = "사용자 ID", example = "user123") @RequestParam String userId
+	) {
 		chatService.likeMessage(userId, messageId);
 	}
 
-	// 좋아요 취소
+	@Operation(summary = "메시지 좋아요 취소", description = "특정 메시지의 좋아요를 취소합니다.")
 	@PostMapping("/unlike/{messageId}")
-	public void unlikeMessage(@PathVariable String messageId, @RequestParam String userId) {
+	public void unlikeMessage(
+		@Parameter(description = "메시지 ID", example = "msg123") @PathVariable String messageId,
+		@Parameter(description = "사용자 ID", example = "user123") @RequestParam String userId
+	) {
 		chatService.unlikeMessage(userId, messageId);
 	}
 
-	// 특정 세션의 QUESTION 메시지를 좋아요 순으로 정렬하여 반환
+	@Operation(summary = "질문 메시지 정렬", description = "특정 세션의 질문 메시지를 좋아요 순으로 정렬하여 반환합니다.")
 	@GetMapping("/questions/{sessionId}")
-	public List<ChatMessageDto> getSortedQuestions(@PathVariable String sessionId) {
+	public List<ChatMessageDto> getSortedQuestions(
+		@Parameter(description = "채팅 세션 ID", example = "1234") @PathVariable String sessionId
+	) {
 		return chatService.getSortedQuestionMessages(sessionId);
 	}
-
 }
