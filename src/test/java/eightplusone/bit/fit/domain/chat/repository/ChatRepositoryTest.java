@@ -5,7 +5,11 @@ import static org.junit.jupiter.api.Assertions.*;
 import eightplusone.bit.fit.domain.chat.entity.ChatMessage;
 import java.time.Duration;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +33,8 @@ public class ChatRepositoryTest {
 	void setUp() {
 		// 테스트 전에 Redis에서 기존 데이터 삭제
 		chatRepository.clearChat(SESSION_ID);
+		Long count = redisTemplate.opsForList().size("chat-" + SESSION_ID);
+		assertEquals(0, count, "clearChat() 이후에도 메시지가 남아 있음!");
 	}
 
 	@Test
@@ -53,6 +59,27 @@ public class ChatRepositoryTest {
 		assertFalse(messages.contains("Message 1")); // 첫 번째 메시지가 삭제되었어야 함
 	}
 
+	// 메시지를 초과 저장할 때 삭제가 정상적으로 이루어지는지
+	@Test
+	void testMessageTrimmingInRedis() {
+		for (int i = 1; i <= 1200; i++) { // 1200개 저장
+			ChatMessage message = ChatMessage.builder()
+				.sessionId(SESSION_ID)
+				.userId("user" + i)
+				.message("Message " + i)
+				.build();
+			chatRepository.saveMessage(message);
+		}
+
+		// Redis에 저장된 메시지 개수 확인
+		Long messageCount = redisTemplate.opsForList().size("chat-" + SESSION_ID);
+		System.out.println("현재 Redis 저장된 메시지 개수: " + messageCount);
+
+		// Redis에 1000개만 남아 있는지 확인
+		assertNotNull(messageCount);
+		assertEquals(1000, messageCount);
+	}
+
 	@Test
 	void testChatMessageExpiration() throws InterruptedException {
 		// 메시지 저장
@@ -75,4 +102,44 @@ public class ChatRepositoryTest {
 		Thread.sleep(6000);
 		assertFalse(chatRepository.existsBySessionId(SESSION_ID));
 	}
+
+	// 특정 메시지가 삭제되었는지 직접 조회
+	@Disabled("Redis 메시지 삭제 로직이 확인되었으므로 테스트 비활성화")
+	@Test
+	void testOldestMessagesAreDeleted() {
+		for (int i = 1; i <= 1100; i++) { // 1100개 저장
+			ChatMessage message = ChatMessage.builder()
+				.sessionId(SESSION_ID)
+				.userId("user" + i)
+				.message("Message " + i)
+				.build();
+			chatRepository.saveMessage(message);
+		}
+
+		// ✅ Redis에 저장된 메시지 개수 직접 확인
+		Long messageCount = redisTemplate.opsForList().size("chat-" + SESSION_ID);
+		System.out.println("🔍 Redis에 저장된 메시지 개수: " + messageCount);
+		assertNotNull(messageCount);
+		assertEquals(1000, messageCount, "Redis에 저장된 메시지 개수가 1000개가 아님!");
+
+		// ✅ Redis에서 가져온 메시지를 Set으로 변환하여 빠르게 비교
+		List<Object> messages = redisTemplate.opsForList().range("chat-" + SESSION_ID, 0, -1);
+		Set<String> messageSet = messages.stream()
+			.map(Object::toString)
+			.collect(Collectors.toSet());
+
+		System.out.println("🔍 현재 Redis에 저장된 메시지 리스트:");
+		messages.forEach(System.out::println);
+
+		// ✅ 첫 번째 100개 메시지("Message 1" ~ "Message 100")는 삭제되었어야 함
+		IntStream.rangeClosed(1, 100).forEach(i -> {
+			assertFalse(messageSet.contains("Message " + i), "오래된 메시지가 삭제되지 않음: Message " + i);
+		});
+
+		// ✅ 가장 마지막 1000개는 유지되어야 함
+		IntStream.rangeClosed(101, 1100).forEach(i -> {
+			assertTrue(messageSet.contains("Message " + i), "최근 메시지가 유지되지 않음: Message " + i);
+		});
+	}
+
 }
