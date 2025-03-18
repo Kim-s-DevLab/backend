@@ -3,7 +3,7 @@ name: CD Pipeline
 on:
   push:
     branches:
-      - "feat-#22-ci-cd"
+      - "dev"
   workflow_dispatch:
 
 jobs:
