@@ -11,7 +11,9 @@ import eightplusone.bit.fit.domain.user.repository.UserRedisRepository;
 import eightplusone.bit.fit.domain.user.repository.UserRepository;
 import eightplusone.bit.fit.global.exception.CustomException;
 import eightplusone.bit.fit.global.exception.ErrorCode;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -113,25 +115,36 @@ public class ChatService {
 			throw new CustomException(ErrorCode.CHAT_SESSION_NOT_FOUND);
 		}
 
-		List<ChatMessage> messages = chatRepository.getRecentMessages(sessionId)
-			.stream()
-			.filter(obj -> obj instanceof ChatMessage)
-			.map(obj -> (ChatMessage)obj)
+		List<Object> rawMessages = chatRepository.getRecentMessages(sessionId);
+		log.info("🔍 Redis에서 가져온 원본 메시지: {}", rawMessages);
+
+		// ✅ ChatMessageDto -> ChatMessage 변환 (userId 추가)
+		List<ChatMessage> messages = rawMessages.stream()
+			.map(obj -> {
+				if (obj instanceof ChatMessageDto dto) {
+					log.info("🔄 ChatMessageDto → ChatMessage 변환: {}", dto);
+					return new ChatMessage(dto.getMessageId(), sessionId, dto.getUserId(), dto.getCategory(),
+						dto.getMessage(), LocalDateTime.now().toString());
+				}
+				log.warn("❌ 변환 실패: {}", obj);
+				return null;
+			})
+
+			.filter(Objects::nonNull)
 			.filter(msg -> msg.getCategory() == ChatCategory.QUESTION)
 			.collect(Collectors.toList());
 
 		// 💡 가져온 메시지 개수 확인 로그
-		log.info("💬 세션 [{}]에서 가져온 메시지 개수: {}", sessionId, messages.size());
+		log.info("💬 세션 [{}]에서 가져온 QUESTION 메시지 개수: {}", sessionId, messages.size());
 
 		List<ChatMessage> topLikedMessages = messages.stream()
-			// .sorted((m1, m2) -> Integer.compare(getLikeCount(m2.getMessageId()), getLikeCount(m1.getMessageId())))
 			.sorted((m1, m2) -> {
 				int likeCount1 = getLikeCount(m1.getMessageId());
 				int likeCount2 = getLikeCount(m2.getMessageId());
 
 				log.info("💡 정렬 중: {} ({}개) vs {} ({}개)", m1.getMessageId(), likeCount1, m2.getMessageId(), likeCount2);
 
-				return Integer.compare(likeCount2, likeCount1); // 내림차순 정렬
+				return Integer.compare(likeCount2, likeCount1); // 내림차순 정렬 (좋아요 많은 순)
 			})
 			.limit(3)
 			.collect(Collectors.toList());
@@ -141,7 +154,8 @@ public class ChatService {
 
 		return topLikedMessages.stream()
 			.map(msg -> new ChatMessageDto(msg.getMessageId(), msg.getCategory(), msg.getMessage(),
-				userRedisRepository.getUserName(msg.getUserId())))
+				userRedisRepository.getUserName(msg.getUserId()), msg.getUserId())) // ✅ userId 포함
 			.collect(Collectors.toList());
 	}
+
 }
