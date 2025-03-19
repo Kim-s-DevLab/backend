@@ -11,6 +11,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -35,4 +36,12 @@ public class Speaker {
 	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "session_id", nullable = false)
 	private Session session;
+
+	@Builder
+	public Speaker(String image, String name, String description, Session session) {
+		this.image = image;
+		this.name = name;
+		this.description = description;
+		this.session = session;
+	}
 }

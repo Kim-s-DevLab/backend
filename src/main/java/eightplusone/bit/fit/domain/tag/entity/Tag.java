@@ -11,6 +11,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -38,4 +39,13 @@ public class Tag {
 	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "session_id", nullable = false)
 	private Session session;
+
+	@Builder
+	public Tag(String field, String topic, String type, String level, Session session) {
+		this.field = field;
+		this.topic = topic;
+		this.type = type;
+		this.level = level;
+		this.session = session;
+	}
 }
