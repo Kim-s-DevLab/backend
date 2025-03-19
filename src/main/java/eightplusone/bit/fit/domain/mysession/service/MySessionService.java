@@ -6,7 +6,8 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import eightplusone.bit.fit.domain.mysession.dto.MySessionListResponseDto;
+import eightplusone.bit.fit.domain.mysession.dto.MySessionLikedSessionsResponseDto;
+import eightplusone.bit.fit.domain.mysession.dto.MySessionScheduleResponseDto;
 import eightplusone.bit.fit.domain.mysession.entity.MySession;
 import eightplusone.bit.fit.domain.mysession.enums.MySessionType;
 import eightplusone.bit.fit.domain.mysession.repository.MySessionRepository;
@@ -35,11 +36,47 @@ public class MySessionService {
 		mySessionRepository.save(MySession.register(user, session));
 	}
 
-	public List<MySessionListResponseDto> findRegisteredMySessions(String email) {
+	public List<MySessionScheduleResponseDto> findRegisteredMySessions(String email) {
 		User user = userRepository.findLoginUserByEmail(email);
 		return mySessionRepository.findSessionsByUserIdAndType(user.getId(), MySessionType.REGISTER)
 			.stream()
-			.map(mySession -> MySessionListResponseDto.from(mySession.getSession()))
+			.map(mySession -> MySessionScheduleResponseDto.from(mySession.getSession()))
 			.collect(Collectors.toList());
+	}
+
+	@Transactional
+	public void likeMySession(String email, Long sessionId) {
+		User user = userRepository.findLoginUserByEmail(email);
+		Session session = sessionRepository.findById(sessionId)
+			.orElseThrow(() -> new CustomException(ErrorCode.RESOURCE_NOT_FOUND));
+		mySessionRepository.save(MySession.like(user, session));
+	}
+
+	public List<MySessionLikedSessionsResponseDto> findLikedMySessions(String email) {
+		User user = userRepository.findLoginUserByEmail(email);
+		return mySessionRepository.findSessionsByUserIdAndType(user.getId(), MySessionType.LIKE)
+			.stream()
+			.map(mySession -> MySessionLikedSessionsResponseDto.from(mySession.getSession()))
+			.collect(Collectors.toList());
+	}
+
+	@Transactional
+	public void unregisterMySession(String email, Long sessionId) {
+		User user = userRepository.findLoginUserByEmail(email);
+		int deletedCount = mySessionRepository.deleteByUserIdAndSessionIdAndType(user.getId(), sessionId,
+			MySessionType.REGISTER);
+		if (deletedCount == 0) {
+			throw new CustomException(ErrorCode.RESOURCE_NOT_FOUND);
+		}
+	}
+
+	@Transactional
+	public void unlikeMySession(String email, Long sessionId) {
+		User user = userRepository.findLoginUserByEmail(email);
+		int deletedCount = mySessionRepository.deleteByUserIdAndSessionIdAndType(user.getId(), sessionId,
+			MySessionType.LIKE);
+		if (deletedCount == 0) {
+			throw new CustomException(ErrorCode.RESOURCE_NOT_FOUND);
+		}
 	}
 }

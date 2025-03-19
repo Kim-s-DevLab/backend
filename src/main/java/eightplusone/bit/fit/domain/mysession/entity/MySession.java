@@ -61,6 +61,14 @@ public class MySession {
 			.build();
 	}
 
+	public static MySession like(User user, Session session) {
+		return MySession.builder()
+			.type(MySessionType.LIKE)
+			.user(user)
+			.session(session)
+			.build();
+	}
+
 	private void setSession(Session session) {
 		this.session = session;
 		session.getMySessions().add(this);
