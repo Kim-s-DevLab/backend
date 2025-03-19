@@ -4,13 +4,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import eightplusone.bit.fit.domain.session.dto.SessionListResponseDto;
 import eightplusone.bit.fit.domain.session.entity.Session;
 import eightplusone.bit.fit.domain.session.entity.enums.CongestionLevel;
 import eightplusone.bit.fit.domain.session.repository.SessionRepository;
+import eightplusone.bit.fit.domain.speaker.dto.SpeakerResponseDto;
+import eightplusone.bit.fit.domain.speaker.entity.Speaker;
+import eightplusone.bit.fit.domain.speaker.repository.SpeakerRepository;
+import eightplusone.bit.fit.domain.tag.dto.TagResponseDto;
+import eightplusone.bit.fit.domain.tag.entity.Tag;
+import eightplusone.bit.fit.domain.tag.repository.TagRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 
@@ -22,6 +31,8 @@ public class SessionService {
 	private final SessionRepository sessionRepository;
 	private final String SESSION_CONGESTION_KEY = "session_congestion";
 	private final String SESSION_USER_KEY = "session_user";
+	private final TagRepository tagRepository;
+	private final SpeakerRepository speakerRepository;
 
 	// TODO: User ID 매개변수 부분 -> 토큰으로 수정
 	// 체크인 시 레디스에 저장
@@ -92,5 +103,17 @@ public class SessionService {
 				"level", newLevel
 			));
 		}
+	}
+
+	public Page<SessionListResponseDto> getSessionsList(Pageable pageable, TagResponseDto tagDto) {
+		Page<Object[]> sessions = tagRepository.tagFilterAndSearch(pageable, tagDto);
+
+		return sessions.map(session -> {
+			return SessionListResponseDto.from(
+				(Session)session[0],
+				SpeakerResponseDto.from((Speaker)session[2]),
+				TagResponseDto.from((Tag)session[1])
+			);
+		});
 	}
 }
