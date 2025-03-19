@@ -156,6 +156,7 @@ public class ChatService {
 			.map(msg -> {
 				log.info("🔍 메시지 ID: {}, UserID: {}", msg.getMessageId(), msg.getUserId());
 				String userName = userRedisRepository.getUserName(msg.getUserId());
+				int likeCount = chatLikeRepository.getLikeCount(msg.getMessageId());
 
 				log.info("🔍 userRedisRepository.getUserName({}) → {}", msg.getUserId(), userName);
 
@@ -163,10 +164,11 @@ public class ChatService {
 					msg.getMessageId(),
 					msg.getCategory(),
 					msg.getMessage(),
-					userName != null ? userName : "알 수 없음", // `null`이면 기본값 설정
-					msg.getUserId(), // `userId`가 `null`이 아닌지 확인
+					userName != null ? userName : "알 수 없음",
+					msg.getUserId(),
 					msg.getSessionId(),
-					msg.getTimestamp()
+					msg.getTimestamp(),
+					likeCount
 				);
 			})
 			.collect(Collectors.toList());
