@@ -8,14 +8,14 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
-@Schema(name = "MySessionRegisterRequestDto: 세션 미리 담기 요청 Dto")
-public class MySessionRegisterRequestDto {
+@Schema(name = "MySessionSessionIdRequestDto: 나의 세션 처리를 위한 SessionId 요청 Dto")
+public class MySessionSessionIdRequestDto {
 	@Min(value = 1, message = "세션 식별자는 1 이상이어야 합니다.")
 	@NotNull(message = "세션 식별자가 입력되지 않았습니다.")
 	@Schema(description = "세션 식별자", example = "1")
 	private Long sessionId;
 
-	public MySessionRegisterRequestDto(Long sessionId) {
+	public MySessionSessionIdRequestDto(Long sessionId) {
 		this.sessionId = sessionId;
 	}
 }

@@ -12,7 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
-import eightplusone.bit.fit.domain.mysession.dto.MySessionListResponseDto;
+import eightplusone.bit.fit.domain.mysession.dto.MySessionScheduleResponseDto;
 import eightplusone.bit.fit.domain.mysession.entity.MySession;
 import eightplusone.bit.fit.domain.mysession.enums.MySessionType;
 import eightplusone.bit.fit.domain.mysession.repository.MySessionRepository;
@@ -83,53 +83,53 @@ class MySessionServiceTest {
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyMMddHHmm");
 
 		//when
-		List<MySessionListResponseDto> mySessionListResponseDto = mySessionService.findRegisteredMySessions(
+		List<MySessionScheduleResponseDto> responseDtos = mySessionService.findRegisteredMySessions(
 			user.getEmail());
 
 		//then
 		assertAll(
-			() -> assertThat(mySessionListResponseDto.get(0).getSessionId()).isEqualTo(session1.getSessionId()),
-			() -> assertThat(mySessionListResponseDto.get(0).getTitle()).isEqualTo(session1.getTitle()),
-			() -> assertThat(mySessionListResponseDto.get(0).getSummary()).isEqualTo(session1.getSummary()),
-			() -> assertThat(mySessionListResponseDto.get(0).getSessionImage()).isEqualTo(session1.getSessionImage()),
-			() -> assertThat(mySessionListResponseDto.get(0).getStandardCount()).isEqualTo(session1.getStandardCount()),
-			() -> assertThat(mySessionListResponseDto.get(0).getAudioChannel()).isEqualTo(session1.getAudioChannel()),
-			() -> assertThat(mySessionListResponseDto.get(0).getStartTime()).isEqualTo(
+			() -> assertThat(responseDtos.get(0).getSessionId()).isEqualTo(session1.getSessionId()),
+			() -> assertThat(responseDtos.get(0).getTitle()).isEqualTo(session1.getTitle()),
+			() -> assertThat(responseDtos.get(0).getSummary()).isEqualTo(session1.getSummary()),
+			() -> assertThat(responseDtos.get(0).getSessionImage()).isEqualTo(session1.getSessionImage()),
+			() -> assertThat(responseDtos.get(0).getStandardCount()).isEqualTo(session1.getStandardCount()),
+			() -> assertThat(responseDtos.get(0).getAudioChannel()).isEqualTo(session1.getAudioChannel()),
+			() -> assertThat(responseDtos.get(0).getStartTime()).isEqualTo(
 				session1.getStartTime().format(formatter)),
-			() -> assertThat(mySessionListResponseDto.get(0).getEndTime()).isEqualTo(
+			() -> assertThat(responseDtos.get(0).getEndTime()).isEqualTo(
 				session1.getEndTime().format(formatter)),
 
-			() -> assertThat(mySessionListResponseDto.get(1).getSessionId()).isEqualTo(session2.getSessionId()),
-			() -> assertThat(mySessionListResponseDto.get(1).getTitle()).isEqualTo(session2.getTitle()),
-			() -> assertThat(mySessionListResponseDto.get(1).getSummary()).isEqualTo(session2.getSummary()),
-			() -> assertThat(mySessionListResponseDto.get(1).getSessionImage()).isEqualTo(session2.getSessionImage()),
-			() -> assertThat(mySessionListResponseDto.get(1).getStandardCount()).isEqualTo(session2.getStandardCount()),
-			() -> assertThat(mySessionListResponseDto.get(1).getAudioChannel()).isEqualTo(session2.getAudioChannel()),
-			() -> assertThat(mySessionListResponseDto.get(1).getStartTime()).isEqualTo(
+			() -> assertThat(responseDtos.get(1).getSessionId()).isEqualTo(session2.getSessionId()),
+			() -> assertThat(responseDtos.get(1).getTitle()).isEqualTo(session2.getTitle()),
+			() -> assertThat(responseDtos.get(1).getSummary()).isEqualTo(session2.getSummary()),
+			() -> assertThat(responseDtos.get(1).getSessionImage()).isEqualTo(session2.getSessionImage()),
+			() -> assertThat(responseDtos.get(1).getStandardCount()).isEqualTo(session2.getStandardCount()),
+			() -> assertThat(responseDtos.get(1).getAudioChannel()).isEqualTo(session2.getAudioChannel()),
+			() -> assertThat(responseDtos.get(1).getStartTime()).isEqualTo(
 				session2.getStartTime().format(formatter)),
-			() -> assertThat(mySessionListResponseDto.get(1).getEndTime()).isEqualTo(
+			() -> assertThat(responseDtos.get(1).getEndTime()).isEqualTo(
 				session2.getEndTime().format(formatter)),
 
-			() -> assertThat(mySessionListResponseDto.get(2).getSessionId()).isEqualTo(session3.getSessionId()),
-			() -> assertThat(mySessionListResponseDto.get(2).getTitle()).isEqualTo(session3.getTitle()),
-			() -> assertThat(mySessionListResponseDto.get(2).getSummary()).isEqualTo(session3.getSummary()),
-			() -> assertThat(mySessionListResponseDto.get(2).getSessionImage()).isEqualTo(session3.getSessionImage()),
-			() -> assertThat(mySessionListResponseDto.get(2).getStandardCount()).isEqualTo(session3.getStandardCount()),
-			() -> assertThat(mySessionListResponseDto.get(2).getAudioChannel()).isEqualTo(session3.getAudioChannel()),
-			() -> assertThat(mySessionListResponseDto.get(2).getStartTime()).isEqualTo(
+			() -> assertThat(responseDtos.get(2).getSessionId()).isEqualTo(session3.getSessionId()),
+			() -> assertThat(responseDtos.get(2).getTitle()).isEqualTo(session3.getTitle()),
+			() -> assertThat(responseDtos.get(2).getSummary()).isEqualTo(session3.getSummary()),
+			() -> assertThat(responseDtos.get(2).getSessionImage()).isEqualTo(session3.getSessionImage()),
+			() -> assertThat(responseDtos.get(2).getStandardCount()).isEqualTo(session3.getStandardCount()),
+			() -> assertThat(responseDtos.get(2).getAudioChannel()).isEqualTo(session3.getAudioChannel()),
+			() -> assertThat(responseDtos.get(2).getStartTime()).isEqualTo(
 				session3.getStartTime().format(formatter)),
-			() -> assertThat(mySessionListResponseDto.get(2).getEndTime()).isEqualTo(
+			() -> assertThat(responseDtos.get(2).getEndTime()).isEqualTo(
 				session3.getEndTime().format(formatter)),
 
-			() -> assertThat(mySessionListResponseDto.get(3).getSessionId()).isEqualTo(session4.getSessionId()),
-			() -> assertThat(mySessionListResponseDto.get(3).getTitle()).isEqualTo(session4.getTitle()),
-			() -> assertThat(mySessionListResponseDto.get(3).getSummary()).isEqualTo(session4.getSummary()),
-			() -> assertThat(mySessionListResponseDto.get(3).getSessionImage()).isEqualTo(session4.getSessionImage()),
-			() -> assertThat(mySessionListResponseDto.get(3).getStandardCount()).isEqualTo(session4.getStandardCount()),
-			() -> assertThat(mySessionListResponseDto.get(3).getAudioChannel()).isEqualTo(session4.getAudioChannel()),
-			() -> assertThat(mySessionListResponseDto.get(3).getStartTime()).isEqualTo(
+			() -> assertThat(responseDtos.get(3).getSessionId()).isEqualTo(session4.getSessionId()),
+			() -> assertThat(responseDtos.get(3).getTitle()).isEqualTo(session4.getTitle()),
+			() -> assertThat(responseDtos.get(3).getSummary()).isEqualTo(session4.getSummary()),
+			() -> assertThat(responseDtos.get(3).getSessionImage()).isEqualTo(session4.getSessionImage()),
+			() -> assertThat(responseDtos.get(3).getStandardCount()).isEqualTo(session4.getStandardCount()),
+			() -> assertThat(responseDtos.get(3).getAudioChannel()).isEqualTo(session4.getAudioChannel()),
+			() -> assertThat(responseDtos.get(3).getStartTime()).isEqualTo(
 				session4.getStartTime().format(formatter)),
-			() -> assertThat(mySessionListResponseDto.get(3).getEndTime()).isEqualTo(
+			() -> assertThat(responseDtos.get(3).getEndTime()).isEqualTo(
 				session4.getEndTime().format(formatter))
 		);
 	}

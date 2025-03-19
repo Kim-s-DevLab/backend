@@ -8,8 +8,8 @@ import lombok.Builder;
 import lombok.Getter;
 
 @Getter
-@Schema(name = "MySessionListResponseDto: 미리 담기된 강연 스케쥴 Dto")
-public class MySessionListResponseDto {
+@Schema(name = "MySessionScheduleResponseDto: 미리 담기된 강연 스케쥴 Dto")
+public class MySessionScheduleResponseDto {
 	@Schema(description = "강연 식별자", example = "1")
 	private final Long sessionId;
 	@Schema(description = "강연 제목", example = "프론트엔드 마스터하기")
@@ -28,7 +28,7 @@ public class MySessionListResponseDto {
 	private final Integer audioChannel;
 
 	@Builder
-	private MySessionListResponseDto(Long sessionId, String title, String sessionImage, String summary,
+	private MySessionScheduleResponseDto(Long sessionId, String title, String sessionImage, String summary,
 		String startTime, String endTime, Integer standardCount, Integer audioChannel) {
 		this.sessionId = sessionId;
 		this.title = title;
@@ -40,9 +40,9 @@ public class MySessionListResponseDto {
 		this.audioChannel = audioChannel;
 	}
 
-	public static MySessionListResponseDto from(Session session) {
+	public static MySessionScheduleResponseDto from(Session session) {
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyMMddHHmm");
-		return MySessionListResponseDto.builder()
+		return MySessionScheduleResponseDto.builder()
 			.sessionId(session.getSessionId())
 			.title(session.getTitle())
 			.sessionImage(session.getSessionImage())

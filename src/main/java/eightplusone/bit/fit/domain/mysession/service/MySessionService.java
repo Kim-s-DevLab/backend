@@ -6,7 +6,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import eightplusone.bit.fit.domain.mysession.dto.MySessionListResponseDto;
+import eightplusone.bit.fit.domain.mysession.dto.MySessionScheduleResponseDto;
 import eightplusone.bit.fit.domain.mysession.entity.MySession;
 import eightplusone.bit.fit.domain.mysession.enums.MySessionType;
 import eightplusone.bit.fit.domain.mysession.repository.MySessionRepository;
@@ -35,11 +35,11 @@ public class MySessionService {
 		mySessionRepository.save(MySession.register(user, session));
 	}
 
-	public List<MySessionListResponseDto> findRegisteredMySessions(String email) {
+	public List<MySessionScheduleResponseDto> findRegisteredMySessions(String email) {
 		User user = userRepository.findLoginUserByEmail(email);
 		return mySessionRepository.findSessionsByUserIdAndType(user.getId(), MySessionType.REGISTER)
 			.stream()
-			.map(mySession -> MySessionListResponseDto.from(mySession.getSession()))
+			.map(mySession -> MySessionScheduleResponseDto.from(mySession.getSession()))
 			.collect(Collectors.toList());
 	}
 }

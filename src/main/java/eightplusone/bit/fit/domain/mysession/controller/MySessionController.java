@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import eightplusone.bit.fit.domain.mysession.dto.MySessionListResponseDto;
-import eightplusone.bit.fit.domain.mysession.dto.MySessionRegisterRequestDto;
+import eightplusone.bit.fit.domain.mysession.dto.MySessionScheduleResponseDto;
+import eightplusone.bit.fit.domain.mysession.dto.MySessionSessionIdRequestDto;
 import eightplusone.bit.fit.domain.mysession.service.MySessionService;
 import eightplusone.bit.fit.global.dto.ResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
@@ -38,9 +38,9 @@ public class MySessionController {
 	})
 	@PostMapping
 	public ResponseEntity<ResponseDto<Object>> registerSession(
-		@RequestBody MySessionRegisterRequestDto mySessionRegisterRequestDto) {
+		@RequestBody MySessionSessionIdRequestDto mySessionSessionIdRequestDto) {
 		mySessionService.registerMySession(SecurityContextHolder.getContext().getAuthentication().getName(),
-			mySessionRegisterRequestDto.getSessionId());
+			mySessionSessionIdRequestDto.getSessionId());
 		return ResponseEntity.status(CREATED).body(ResponseDto.success(CREATED, "세션 미리 담기 등록 성공", null));
 	}
 
@@ -52,7 +52,7 @@ public class MySessionController {
 		@ApiResponse(responseCode = "500", description = "서버에 오류가 발생했습니다."),
 	})
 	@GetMapping
-	public ResponseEntity<ResponseDto<List<MySessionListResponseDto>>> getRegisteredSessions() {
+	public ResponseEntity<ResponseDto<List<MySessionScheduleResponseDto>>> getRegisteredSessions() {
 		return ResponseEntity.status(OK).body(ResponseDto.success(OK, "미리 담은 세션 스케쥴 조회 성공",
 			mySessionService.findRegisteredMySessions(
 				SecurityContextHolder.getContext().getAuthentication().getName())));
