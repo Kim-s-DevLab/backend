@@ -5,6 +5,7 @@ import static org.springframework.http.HttpStatus.*;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -39,7 +40,7 @@ public class UserController {
 	})
 	@DeleteMapping
 	public ResponseEntity<ResponseDto<Object>> delete() {
-		userService.delete();
+		userService.delete(SecurityContextHolder.getContext().getAuthentication().getName());
 		return ResponseEntity.status(CREATED)
 			.header(HttpHeaders.SET_COOKIE,
 				CookieUtil.createCookie(REFRESH_TOKEN_COOKIE_NAME, null, REFRESH_EXPIRATION_DELETE).toString())
@@ -53,7 +54,8 @@ public class UserController {
 	})
 	@GetMapping("/account")
 	public ResponseEntity<ResponseDto<UserAccountResponseDto>> getAccount() {
-		return ResponseEntity.status(OK).body(ResponseDto.success(OK, "회원 계정 정보 조회 성공", userService.getAccountInfo()));
+		return ResponseEntity.status(OK).body(ResponseDto.success(OK, "회원 계정 정보 조회 성공",
+			userService.getAccountInfo(SecurityContextHolder.getContext().getAuthentication().getName())));
 	}
 
 	@Operation(summary = "회원 개인 정보 조회", description = "**성공 응답 데이터:**  회원 개인 정보")
@@ -63,10 +65,11 @@ public class UserController {
 	})
 	@GetMapping("/profile")
 	public ResponseEntity<ResponseDto<UserProfileResponseDto>> getProfile() {
-		return ResponseEntity.status(OK).body(ResponseDto.success(OK, "회원 개인 정보 조회 성공", userService.getProfileInfo()));
+		return ResponseEntity.status(OK).body(ResponseDto.success(OK, "회원 개인 정보 조회 성공",
+			userService.getProfileInfo(SecurityContextHolder.getContext().getAuthentication().getName())));
 	}
 
-	@Operation(summary = "회원 개인 정보 업데이트", description = "**성공 응답 데이터:**  null")
+	@Operation(summary = "회원 개인 정보 업데이트", description = "**성공 응답 데이터:**  null, 관심 분야는 3개를 선택해야합니다.")
 	@ApiResponses(value = {
 		@ApiResponse(responseCode = "200", description = "회원 개인 정보 업데이트 성공"),
 		@ApiResponse(responseCode = "400", description = "업데이트 필드 값 오류"),
@@ -75,7 +78,8 @@ public class UserController {
 	@PutMapping("/profile")
 	public ResponseEntity<ResponseDto<Object>> updateProfile(
 		@Valid @RequestBody UserProfileUpdateRequestDto userProfileUpdateRequestDto) {
-		userService.updateProfileInfo(userProfileUpdateRequestDto);
+		userService.updateProfileInfo(SecurityContextHolder.getContext().getAuthentication().getName(),
+			userProfileUpdateRequestDto);
 		return ResponseEntity.status(OK).body(ResponseDto.success(OK, "회원 개인 정보 업데이트 성공", null));
 	}
 }

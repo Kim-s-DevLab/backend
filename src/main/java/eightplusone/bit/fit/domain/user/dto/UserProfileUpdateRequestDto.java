@@ -1,9 +1,13 @@
 package eightplusone.bit.fit.domain.user.dto;
 
+import java.util.List;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,18 +26,19 @@ public class UserProfileUpdateRequestDto {
 	@Schema(description = "연차", example = "1")
 	private Integer years;
 
-	@NotBlank(message = "관심 분야가 입력되지 않았습니다.")
-	@Schema(description = "관심 분야", example = "클라우드")
-	private String interests;
+	@NotEmpty(message = "관심 분야가 되지않았습니다.")
+	@Size(min = 3, max = 3, message = "관심 분야는 3개 선택해야 합니다.")
+	@Schema(description = "사용자의 관심 분야 목록", example = "[\"클라우드\", \"데이터베이스\", \"자바스크립트\"]")
+	private List<String> interests;
 
 	@Builder
-	private UserProfileUpdateRequestDto(String job, Integer years, String interests) {
+	private UserProfileUpdateRequestDto(String job, Integer years, List<String> interests) {
 		this.job = job;
 		this.years = years;
 		this.interests = interests;
 	}
 
-	public static UserProfileUpdateRequestDto of(String job, Integer years, String interests) {
+	public static UserProfileUpdateRequestDto of(String job, Integer years, List<String> interests) {
 		return UserProfileUpdateRequestDto.builder()
 			.job(job)
 			.years(years)
