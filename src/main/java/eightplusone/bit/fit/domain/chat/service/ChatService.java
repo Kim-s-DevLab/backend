@@ -35,7 +35,7 @@ public class ChatService {
 	}
 
 	// 메시지 전송 (Redis Pub/Sub 사용)
-	public void sendMessage(ChatMessageDto dto, String userId, String sessionId) throws JsonProcessingException {
+	public void sendMessage(ChatMessageDto dto, String userId, Long sessionId) throws JsonProcessingException {
 		if (dto.getMessage() == null || dto.getMessage().trim().isEmpty()) {
 			throw new CustomException(ErrorCode.INVALID_MESSAGE_FORMAT);
 		}
@@ -44,7 +44,7 @@ public class ChatService {
 			throw new CustomException(ErrorCode.MESSAGE_TOO_LONG);
 		}
 
-		if (!chatRepository.existsBySessionId(sessionId)) {
+		if (!chatRepository.existsBySessionId(String.valueOf(sessionId))) {
 			throw new CustomException(ErrorCode.CHAT_SESSION_NOT_FOUND);
 		}
 
@@ -109,12 +109,12 @@ public class ChatService {
 	}
 
 	// 특정 세션의 QUESTION 메시지를 좋아요 기준으로 정렬
-	public List<ChatMessageDto> getSortedQuestionMessages(String sessionId) {
-		if (!chatRepository.existsBySessionId(sessionId)) {
+	public List<ChatMessageDto> getSortedQuestionMessages(Long sessionId) {
+		if (!chatRepository.existsBySessionId(String.valueOf(sessionId))) {
 			throw new CustomException(ErrorCode.CHAT_SESSION_NOT_FOUND);
 		}
 
-		List<Object> rawMessages = chatRepository.getRecentMessages(sessionId);
+		List<Object> rawMessages = chatRepository.getRecentMessages(String.valueOf(sessionId));
 		log.info("🔍 Redis에서 가져온 원본 메시지: {}", rawMessages);
 
 		// ChatMessageDto -> ChatMessage 변환 (userId 추가)

@@ -3,11 +3,15 @@ package eightplusone.bit.fit.domain.chat.repository;
 import static org.junit.jupiter.api.Assertions.*;
 
 import eightplusone.bit.fit.domain.chat.entity.ChatMessage;
+import eightplusone.bit.fit.domain.session.entity.Session;
+import eightplusone.bit.fit.domain.session.repository.SessionRepository;
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -27,14 +31,38 @@ public class ChatRepositoryTest {
 	@Autowired
 	private RedisTemplate<String, Object> redisTemplate;
 
-	private static final String SESSION_ID = "testSession";
+	@Autowired
+	private SessionRepository sessionRepository;
+
+	private static final Long SESSION_ID = 1L;
 
 	@BeforeEach
 	void setUp() {
-		// 테스트 전에 Redis에서 기존 데이터 삭제
-		chatRepository.clearChat(SESSION_ID);
+		// 기존 데이터 삭제
+		chatRepository.clearChat(SESSION_ID.toString());
+		sessionRepository.deleteAll(); // 기존 세션 데이터 정리
+
+		// 테스트용 세션 미리 저장 (강연시간: 1시간)
+		Session testSession = Session.builder()
+			.title("테스트 세션")
+			.sessionImage("test.jpg")
+			.summary("테스트용 강연")
+			.startTime(LocalDateTime.now())
+			.endTime(LocalDateTime.now().plusHours(1)) // 강연시간 1시간
+			.standardCount(100)
+			.audioChannel(2)
+			.build();
+		sessionRepository.save(testSession);
+
+		// 저장 후 검증
 		Long count = redisTemplate.opsForList().size("chat-" + SESSION_ID);
 		assertEquals(0, count, "clearChat() 이후에도 메시지가 남아 있음!");
+	}
+
+	@AfterEach
+	void tearDown() {
+		// 테스트 종료 후 세션 정리
+		sessionRepository.deleteAll();
 	}
 
 	@Test
@@ -50,7 +78,7 @@ public class ChatRepositoryTest {
 		}
 
 		// 저장된 메시지 개수 가져오기
-		List<Object> messages = chatRepository.getRecentMessages(SESSION_ID);
+		List<Object> messages = chatRepository.getRecentMessages(SESSION_ID.toString());
 
 		// 메시지가 1000개만 유지되는지 검증
 		assertEquals(1000, messages.size());
@@ -82,25 +110,32 @@ public class ChatRepositoryTest {
 
 	@Test
 	void testChatMessageExpiration() throws InterruptedException {
+		// 테스트용 세션 가져오기
+		Session session = sessionRepository.findById(SESSION_ID).orElse(null);
+		assertNotNull(session, "테스트용 세션이 존재해야 합니다!");
+
+		// 강연시간(1시간) + 30분 TTL 계산
+		long expectedTtl = session.getLectureDuration() + Duration.ofMinutes(30).getSeconds();
+
 		// 메시지 저장
 		ChatMessage message = ChatMessage.builder()
-			.sessionId(SESSION_ID)
+			.sessionId(session.getSessionId()) // 저장된 세션 ID 사용
 			.userId("user123")
 			.message("Test TTL")
 			.build();
 		chatRepository.saveMessage(message);
 
-		// TTL 설정 확인 (2시간 → 7200초)
-		Long ttl = redisTemplate.getExpire("chat-" + SESSION_ID);
+		// TTL 설정 확인
+		Long ttl = redisTemplate.getExpire("chat-" + session.getSessionId());
 		assertNotNull(ttl);
-		assertTrue(ttl > 7100); // 2시간(7200초) 설정되었는지 확인
+		assertTrue(ttl >= expectedTtl - 10, "TTL이 강연시간 + 30분과 일치하지 않음");
 
 		// TTL을 5초로 변경하여 삭제되는지 테스트
-		redisTemplate.expire("chat-" + SESSION_ID, Duration.ofSeconds(5));
+		redisTemplate.expire("chat-" + session.getSessionId(), Duration.ofSeconds(5));
 
 		// 6초 대기 후 데이터가 삭제되었는지 확인
 		Thread.sleep(6000);
-		assertFalse(chatRepository.existsBySessionId(SESSION_ID));
+		assertFalse(chatRepository.existsBySessionId(session.getSessionId().toString()));
 	}
 
 	// 특정 메시지가 삭제되었는지 직접 조회
@@ -116,13 +151,13 @@ public class ChatRepositoryTest {
 			chatRepository.saveMessage(message);
 		}
 
-		// ✅ Redis에 저장된 메시지 개수 직접 확인
+		// Redis에 저장된 메시지 개수 직접 확인
 		Long messageCount = redisTemplate.opsForList().size("chat-" + SESSION_ID);
 		System.out.println("🔍 Redis에 저장된 메시지 개수: " + messageCount);
 		assertNotNull(messageCount);
 		assertEquals(1000, messageCount, "Redis에 저장된 메시지 개수가 1000개가 아님!");
 
-		// ✅ Redis에서 가져온 메시지를 Set으로 변환하여 빠르게 비교
+		// Redis에서 가져온 메시지를 Set으로 변환하여 빠르게 비교
 		List<Object> messages = redisTemplate.opsForList().range("chat-" + SESSION_ID, 0, -1);
 		Set<String> messageSet = messages.stream()
 			.map(Object::toString)
@@ -131,12 +166,12 @@ public class ChatRepositoryTest {
 		System.out.println("🔍 현재 Redis에 저장된 메시지 리스트:");
 		messages.forEach(System.out::println);
 
-		// ✅ 첫 번째 100개 메시지("Message 1" ~ "Message 100")는 삭제되었어야 함
+		// 첫 번째 100개 메시지("Message 1" ~ "Message 100")는 삭제되었어야 함
 		IntStream.rangeClosed(1, 100).forEach(i -> {
 			assertFalse(messageSet.contains("Message " + i), "오래된 메시지가 삭제되지 않음: Message " + i);
 		});
 
-		// ✅ 가장 마지막 1000개는 유지되어야 함
+		// 가장 마지막 1000개는 유지되어야 함
 		IntStream.rangeClosed(101, 1100).forEach(i -> {
 			assertTrue(messageSet.contains("Message " + i), "최근 메시지가 유지되지 않음: Message " + i);
 		});
