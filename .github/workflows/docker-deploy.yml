@@ -74,16 +74,19 @@ jobs:
 
             # 환경 변수 추가 함수
             add_env_var() {
-            local key=$1
-            local value=$2
-            local file=".env"
+              local key=$1
+              local value=$2
+              local file=".env"
             
-            if grep -q "^$key=" "$file"; then
-            echo "$key already exists in .env, skipping..."
-            else
-            echo "$key=$value" >> "$file"
-            echo "Added $key to .env"
-            fi
+              if grep -q "^$key=" "$file"; then
+                # 기존에 키가 있으면 수정
+                sed -i "s/^$key=.*/$key=$value/" "$file"
+                echo "Updated $key in .env"
+              else
+                # 키가 없으면 추가
+                echo "$key=$value" >> "$file"
+                echo "Added $key to .env"
+              fi
             }
             
             # Redis 및 Spring Boot 관련 환경 변수 설정
