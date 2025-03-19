@@ -43,9 +43,10 @@ class ChatServiceTest {
 
 	private ChatMessageDto chatMessageDto;
 	private ChatMessage chatMessage;
-	private final String sessionId = "testSession";
+	private final Long sessionId = 1L;
 	private final String userId = "testUser";
 	private final String messageId = "testMessage";
+	private final String timestamp = "testTimestamp";
 
 	@BeforeEach
 	void setUp() {
@@ -54,7 +55,9 @@ class ChatServiceTest {
 			ChatCategory.GENERAL,
 			"Test message",
 			"Test User",
-			userId
+			userId,
+			sessionId,
+			timestamp
 		);
 
 		chatMessage = ChatMessage.builder()
@@ -68,7 +71,7 @@ class ChatServiceTest {
 	// 채팅 메시지를 성공적으로 저장하고 레디스에 발행되는지 확인
 	@Test
 	void sendMessage_success() throws JsonProcessingException {
-		when(chatRepository.existsBySessionId(sessionId)).thenReturn(true);
+		when(chatRepository.existsBySessionId(String.valueOf(sessionId))).thenReturn(true);
 		doNothing().when(chatRepository).saveMessage(any(ChatMessage.class));
 
 		chatService.sendMessage(chatMessageDto, userId, sessionId);
@@ -80,7 +83,7 @@ class ChatServiceTest {
 	// 존재하지 않는 세션에 메시지를 보내면 예외가 발생하는지 확인
 	@Test
 	void sendMessage_fails_whenSessionNotFound() {
-		when(chatRepository.existsBySessionId(sessionId)).thenReturn(false);
+		when(chatRepository.existsBySessionId(String.valueOf(sessionId))).thenReturn(false);
 
 		CustomException exception = assertThrows(CustomException.class, () ->
 			chatService.sendMessage(chatMessageDto, userId, sessionId));
@@ -135,22 +138,22 @@ class ChatServiceTest {
 	// 특정 채팅방의 최근 메시지를 정상적으로 조회할 수 있는지 확인
 	@Test
 	void getRecentMessages_success() {
-		when(chatRepository.existsBySessionId(sessionId)).thenReturn(true);
-		when(chatRepository.getRecentMessages(sessionId)).thenReturn(List.of(chatMessage));
+		when(chatRepository.existsBySessionId(String.valueOf(sessionId))).thenReturn(true);
+		when(chatRepository.getRecentMessages(String.valueOf(sessionId))).thenReturn(List.of(chatMessage));
 
-		List<Object> messages = chatService.getRecentMessages(sessionId);
+		List<Object> messages = chatService.getRecentMessages(String.valueOf(sessionId));
 
 		assertThat(messages).isNotEmpty();
-		verify(chatRepository, times(1)).getRecentMessages(sessionId);
+		verify(chatRepository, times(1)).getRecentMessages(String.valueOf(sessionId));
 	}
 
 	// 존재하지 않는 세션의 메시지를 조회할 때 예외가 발생하는지 확인
 	@Test
 	void getRecentMessages_fails_whenSessionNotFound() {
-		when(chatRepository.existsBySessionId(sessionId)).thenReturn(false);
+		when(chatRepository.existsBySessionId(String.valueOf(sessionId))).thenReturn(false);
 
 		CustomException exception = assertThrows(CustomException.class, () ->
-			chatService.getRecentMessages(sessionId));
+			chatService.getRecentMessages(String.valueOf(sessionId)));
 
 		assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.CHAT_SESSION_NOT_FOUND);
 	}
@@ -159,11 +162,11 @@ class ChatServiceTest {
 	@Test
 	void getSortedQuestionMessages_success() {
 		// Given
-		when(chatRepository.existsBySessionId("session1")).thenReturn(true);
-		when(chatRepository.getRecentMessages("session1")).thenReturn(Arrays.asList(
-			new ChatMessageDto("msg1", ChatCategory.QUESTION, "Question 1", "Alice", "user1"),
-			new ChatMessageDto("msg2", ChatCategory.QUESTION, "Question 2", "Bob", "user2"),
-			new ChatMessageDto("msg3", ChatCategory.GENERAL, "General message", "Charlie", "user3")
+		when(chatRepository.existsBySessionId(String.valueOf(1L))).thenReturn(true);
+		when(chatRepository.getRecentMessages(String.valueOf(1L))).thenReturn(Arrays.asList(
+			new ChatMessageDto("msg1", ChatCategory.QUESTION, "Question 1", "Alice", "user1", 1L, "timestamp1"),
+			new ChatMessageDto("msg2", ChatCategory.QUESTION, "Question 2", "Bob", "user2", 1L, "timestamp2"),
+			new ChatMessageDto("msg3", ChatCategory.GENERAL, "General message", "Charlie", "user3", 1L, "timestamp3")
 		));
 
 		when(chatLikeRepository.getLikeCount("like:msg1")).thenReturn(10);
@@ -172,7 +175,7 @@ class ChatServiceTest {
 		when(userRedisRepository.getUserName("user2")).thenReturn("Bob");
 
 		// When
-		List<ChatMessageDto> sortedMessages = chatService.getSortedQuestionMessages("session1");
+		List<ChatMessageDto> sortedMessages = chatService.getSortedQuestionMessages(1L);
 
 		// Then
 		assertThat(sortedMessages).hasSize(2);
@@ -184,10 +187,10 @@ class ChatServiceTest {
 	@Test
 	void getSortedQuestionMessages_fails_whenSessionNotFound() {
 		// Given
-		when(chatRepository.existsBySessionId("session1")).thenReturn(false);
+		when(chatRepository.existsBySessionId(String.valueOf(1L))).thenReturn(false);
 
 		// When & Then
-		assertThatThrownBy(() -> chatService.getSortedQuestionMessages("session1"))
+		assertThatThrownBy(() -> chatService.getSortedQuestionMessages(1L))
 			.isInstanceOf(CustomException.class)
 			.hasMessage(ErrorCode.CHAT_SESSION_NOT_FOUND.getMessage());
 	}

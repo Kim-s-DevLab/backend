@@ -11,7 +11,6 @@ import eightplusone.bit.fit.domain.user.repository.UserRedisRepository;
 import eightplusone.bit.fit.domain.user.repository.UserRepository;
 import eightplusone.bit.fit.global.exception.CustomException;
 import eightplusone.bit.fit.global.exception.ErrorCode;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -36,7 +35,7 @@ public class ChatService {
 	}
 
 	// 메시지 전송 (Redis Pub/Sub 사용)
-	public void sendMessage(ChatMessageDto dto, String userId, String sessionId) throws JsonProcessingException {
+	public void sendMessage(ChatMessageDto dto, String userId, Long sessionId) throws JsonProcessingException {
 		if (dto.getMessage() == null || dto.getMessage().trim().isEmpty()) {
 			throw new CustomException(ErrorCode.INVALID_MESSAGE_FORMAT);
 		}
@@ -45,7 +44,7 @@ public class ChatService {
 			throw new CustomException(ErrorCode.MESSAGE_TOO_LONG);
 		}
 
-		if (!chatRepository.existsBySessionId(sessionId)) {
+		if (!chatRepository.existsBySessionId(String.valueOf(sessionId))) {
 			throw new CustomException(ErrorCode.CHAT_SESSION_NOT_FOUND);
 		}
 
@@ -110,12 +109,12 @@ public class ChatService {
 	}
 
 	// 특정 세션의 QUESTION 메시지를 좋아요 기준으로 정렬
-	public List<ChatMessageDto> getSortedQuestionMessages(String sessionId) {
-		if (!chatRepository.existsBySessionId(sessionId)) {
+	public List<ChatMessageDto> getSortedQuestionMessages(Long sessionId) {
+		if (!chatRepository.existsBySessionId(String.valueOf(sessionId))) {
 			throw new CustomException(ErrorCode.CHAT_SESSION_NOT_FOUND);
 		}
 
-		List<Object> rawMessages = chatRepository.getRecentMessages(sessionId);
+		List<Object> rawMessages = chatRepository.getRecentMessages(String.valueOf(sessionId));
 		log.info("🔍 Redis에서 가져온 원본 메시지: {}", rawMessages);
 
 		// ChatMessageDto -> ChatMessage 변환 (userId 추가)
@@ -123,7 +122,7 @@ public class ChatService {
 			.map(obj -> {
 				if (obj instanceof ChatMessageDto dto) {
 					return new ChatMessage(dto.getMessageId(), sessionId, dto.getUserId(), dto.getCategory(),
-						dto.getMessage(), LocalDateTime.now().toString());
+						dto.getMessage(), dto.getTimestamp());
 				} else if (obj instanceof ChatMessage message) {
 					return message;  // 기존 ChatMessage 객체 그대로 사용
 				}
@@ -164,8 +163,10 @@ public class ChatService {
 					msg.getMessageId(),
 					msg.getCategory(),
 					msg.getMessage(),
-					userName != null ? userName : "알 수 없음", // ✅ `null`이면 기본값 설정
-					msg.getUserId() // `userId`가 `null`이 아닌지 확인
+					userName != null ? userName : "알 수 없음", // `null`이면 기본값 설정
+					msg.getUserId(), // `userId`가 `null`이 아닌지 확인
+					msg.getSessionId(),
+					msg.getTimestamp()
 				);
 			})
 			.collect(Collectors.toList());

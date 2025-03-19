@@ -39,7 +39,7 @@ public class ChatController {
 		@Payload ChatMessageDto message,
 		@Parameter(description = "사용자 ID", example = "user123") @Header("User-Id") String userId
 	) throws JsonProcessingException {
-		chatService.sendMessage(message, userId, sessionId);
+		chatService.sendMessage(message, userId, Long.valueOf(sessionId));
 	}
 
 	@Operation(summary = "최근 메시지 조회", description = "특정 채팅방의 최근 메시지를 조회합니다.")
@@ -86,6 +86,6 @@ public class ChatController {
 	public List<ChatMessageDto> getSortedQuestions(
 		@Parameter(description = "채팅 세션 ID", example = "1234") @PathVariable String sessionId
 	) {
-		return chatService.getSortedQuestionMessages(sessionId);
+		return chatService.getSortedQuestionMessages(Long.valueOf(sessionId));
 	}
 }
