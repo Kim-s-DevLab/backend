@@ -19,5 +19,5 @@ public interface MySessionRepository extends JpaRepository<MySession, Long> {
 	@Query(""" 
 		delete from MySession ms where ms.user.id = :userId and ms.session.sessionId = :sessionId and ms.type = :type
 		""")
-	void deleteByUserIdAndSessionIdAndType(Long userId, Long sessionId, MySessionType type);
+	int deleteByUserIdAndSessionIdAndType(Long userId, Long sessionId, MySessionType type);
 }

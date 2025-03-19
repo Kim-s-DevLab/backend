@@ -63,12 +63,20 @@ public class MySessionService {
 	@Transactional
 	public void unregisterMySession(String email, Long sessionId) {
 		User user = userRepository.findLoginUserByEmail(email);
-		mySessionRepository.deleteByUserIdAndSessionIdAndType(user.getId(), sessionId, MySessionType.REGISTER);
+		int deletedCount = mySessionRepository.deleteByUserIdAndSessionIdAndType(user.getId(), sessionId,
+			MySessionType.REGISTER);
+		if (deletedCount == 0) {
+			throw new CustomException(ErrorCode.RESOURCE_NOT_FOUND);
+		}
 	}
 
 	@Transactional
 	public void unlikeMySession(String email, Long sessionId) {
 		User user = userRepository.findLoginUserByEmail(email);
-		mySessionRepository.deleteByUserIdAndSessionIdAndType(user.getId(), sessionId, MySessionType.LIKE);
+		int deletedCount = mySessionRepository.deleteByUserIdAndSessionIdAndType(user.getId(), sessionId,
+			MySessionType.LIKE);
+		if (deletedCount == 0) {
+			throw new CustomException(ErrorCode.RESOURCE_NOT_FOUND);
+		}
 	}
 }
