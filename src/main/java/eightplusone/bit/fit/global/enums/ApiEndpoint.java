@@ -1,7 +1,8 @@
 package eightplusone.bit.fit.global.enums;
 
-import lombok.Getter;
 import org.springframework.http.HttpMethod;
+
+import lombok.Getter;
 
 @Getter
 public enum ApiEndpoint {
@@ -23,14 +24,16 @@ public enum ApiEndpoint {
 	AUTHENTICATED_GET(HttpMethod.GET, new String[] {
 		"/api/v1/users/account",
 		"/api/v1/users/profile",
-		"/api/v1/users/sessions"
+		"/api/v1/users/sessions",
+		"/api/v1/users/sessions/like"
 	}),
 
 	AUTHENTICATED_POST(HttpMethod.POST, new String[] {
 		"/api/v1/auth/logout",
 		"/api/v1/enter/checkin",
 		"/api/v1/enter/checkout",
-		"/api/v1/users/sessions"
+		"/api/v1/users/sessions",
+		"/api/v1/users/sessions/like"
 	}),
 
 	AUTHENTICATED_PUT(HttpMethod.PUT, new String[] {
