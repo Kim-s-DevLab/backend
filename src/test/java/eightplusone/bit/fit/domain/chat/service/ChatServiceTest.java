@@ -47,6 +47,7 @@ class ChatServiceTest {
 	private final String userId = "testUser";
 	private final String messageId = "testMessage";
 	private final String timestamp = "testTimestamp";
+	private final int likes = 0;
 
 	@BeforeEach
 	void setUp() {
@@ -57,7 +58,8 @@ class ChatServiceTest {
 			"Test User",
 			userId,
 			sessionId,
-			timestamp
+			timestamp,
+			likes
 		);
 
 		chatMessage = ChatMessage.builder()
@@ -164,9 +166,9 @@ class ChatServiceTest {
 		// Given
 		when(chatRepository.existsBySessionId(String.valueOf(1L))).thenReturn(true);
 		when(chatRepository.getRecentMessages(String.valueOf(1L))).thenReturn(Arrays.asList(
-			new ChatMessageDto("msg1", ChatCategory.QUESTION, "Question 1", "Alice", "user1", 1L, "timestamp1"),
-			new ChatMessageDto("msg2", ChatCategory.QUESTION, "Question 2", "Bob", "user2", 1L, "timestamp2"),
-			new ChatMessageDto("msg3", ChatCategory.GENERAL, "General message", "Charlie", "user3", 1L, "timestamp3")
+			new ChatMessageDto("msg1", ChatCategory.QUESTION, "Question 1", "Alice", "user1", 1L, "timestamp1", 1),
+			new ChatMessageDto("msg2", ChatCategory.QUESTION, "Question 2", "Bob", "user2", 1L, "timestamp2", 1),
+			new ChatMessageDto("msg3", ChatCategory.GENERAL, "General message", "Charlie", "user3", 1L, "timestamp3", 1)
 		));
 
 		when(chatLikeRepository.getLikeCount("like:msg1")).thenReturn(10);
