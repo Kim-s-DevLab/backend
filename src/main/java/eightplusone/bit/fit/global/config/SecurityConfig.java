@@ -63,7 +63,7 @@ public class SecurityConfig {
 				configuration.setAllowedHeaders(ALLOWED_HEADERS);
 				configuration.setMaxAge(MAX_AGE);
 				configuration.setExposedHeaders(Collections.singletonList(HttpHeaders.SET_COOKIE));
-				configuration.setExposedHeaders(Collections.singletonList(HttpHeaders.AUTHORIZATION));
+				configuration.setExposedHeaders(Collections.singletonList(AUTHORIZATION));
 				return configuration;
 			}))
 			.csrf(AbstractHttpConfigurer::disable)
