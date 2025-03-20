@@ -47,9 +47,6 @@ class SessionServiceTest {
 	@InjectMocks
 	private SessionService sessionService;
 
-	// @Mock
-	// private TagRepository tagRepository;
-
 	@BeforeEach
 	void setUp() {
 		MockitoAnnotations.openMocks(this);
@@ -253,6 +250,44 @@ class SessionServiceTest {
 			() -> assertThat(content.get(5).getTitle()).isEqualTo(session6.getTitle()),
 			() -> assertThat(content.get(5).getSpeaker().getName()).isEqualTo(speaker6.getName()),
 			() -> assertThat(content.get(5).getTags().getField()).isEqualTo(tag6.getField())
+		);
+	}
+
+	@Test
+	@DisplayName("라이브 중인 세션을 조회한다")
+	void getLiveSessions() {
+		// given
+		Session session1 = SessionFixture.SESSION_STAGE_1_FIXTURE_1.createSession();
+		Session session2 = SessionFixture.SESSION_STAGE_1_FIXTURE_2.createSession();
+
+		Speaker speaker1 = SpeakerFixture.SPEAKER_FIXTURE_1.createSpeaker();
+		Speaker speaker2 = SpeakerFixture.SPEAKER_FIXTURE_2.createSpeaker();
+
+		Tag tag1 = TagFixture.TAG_FIXTURE_1.createTag();
+		Tag tag2 = TagFixture.TAG_FIXTURE_2.createTag();
+
+		List<Object[]> mockData = List.of(
+			new Object[] {session1, speaker1, tag1},
+			new Object[] {session2, speaker2, tag2}
+		);
+
+		when(sessionRepository.findLiveSessionsWithSpeakerAndTag()).thenReturn(mockData);
+
+		// when
+		List<SessionListResponseDto> result = sessionService.getLiveSessions();
+
+		// then
+		assertThat(result).isNotNull();
+		assertThat(result).hasSize(2);
+
+		assertAll(
+			() -> assertThat(result.get(0).getTitle()).isEqualTo(session1.getTitle()),
+			() -> assertThat(result.get(0).getSpeaker().getName()).isEqualTo(speaker1.getName()),
+			() -> assertThat(result.get(0).getTags().getField()).isEqualTo(tag1.getField()),
+
+			() -> assertThat(result.get(1).getTitle()).isEqualTo(session2.getTitle()),
+			() -> assertThat(result.get(1).getSpeaker().getName()).isEqualTo(speaker2.getName()),
+			() -> assertThat(result.get(1).getTags().getField()).isEqualTo(tag2.getField())
 		);
 	}
 }
