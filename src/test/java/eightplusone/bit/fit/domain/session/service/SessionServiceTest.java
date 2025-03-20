@@ -27,7 +27,7 @@ import eightplusone.bit.fit.domain.session.dto.SessionListResponseDto;
 import eightplusone.bit.fit.domain.session.entity.Session;
 import eightplusone.bit.fit.domain.session.repository.SessionRepository;
 import eightplusone.bit.fit.domain.speaker.entity.Speaker;
-import eightplusone.bit.fit.domain.tag.dto.TagResponseDto;
+import eightplusone.bit.fit.domain.tag.dto.TagDto;
 import eightplusone.bit.fit.domain.tag.entity.Tag;
 import eightplusone.bit.fit.support.fixture.SessionFixture;
 import eightplusone.bit.fit.support.fixture.SpeakerFixture;
@@ -146,7 +146,7 @@ class SessionServiceTest {
 
 		Tag tag1 = TagFixture.TAG_FIXTURE_1.createTag();
 
-		TagResponseDto tagDto = TagResponseDto.from(tag1);
+		TagDto tagDto = TagDto.from(tag1);
 
 		List<Object[]> mockData = new ArrayList<>();
 		mockData.add(new Object[] {session1, tag1, speaker1});

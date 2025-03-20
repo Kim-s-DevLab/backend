@@ -8,7 +8,7 @@ import lombok.Getter;
 @Getter
 @Builder
 @Schema(name = "TagResponseDto: 태그 정보 응답 dto")
-public class TagResponseDto {
+public class TagDto {
 	private String field;
 
 	private String topic;
@@ -17,8 +17,8 @@ public class TagResponseDto {
 
 	private String level;
 
-	public static TagResponseDto from(Tag tag) {
-		return TagResponseDto.builder()
+	public static TagDto from(Tag tag) {
+		return TagDto.builder()
 			.field(tag.getField())
 			.topic(tag.getTopic())
 			.type(tag.getType())

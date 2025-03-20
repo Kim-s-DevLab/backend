@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import eightplusone.bit.fit.domain.session.dto.SessionListResponseDto;
 import eightplusone.bit.fit.domain.session.service.SessionService;
-import eightplusone.bit.fit.domain.tag.dto.TagResponseDto;
+import eightplusone.bit.fit.domain.tag.dto.TagDto;
 import eightplusone.bit.fit.global.dto.ResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -32,7 +32,7 @@ public class SessionController {
 	})
 	@GetMapping("/all")
 	public ResponseEntity<ResponseDto<Page<SessionListResponseDto>>> all(@PageableDefault(size = 9) Pageable pageable,
-		TagResponseDto dto) {
+		TagDto dto) {
 		return ResponseEntity.status(OK)
 			.body(ResponseDto.success(OK, "세션 전체 리스트 조회 성공", sessionService.getSessionsList(pageable, dto)));
 	}

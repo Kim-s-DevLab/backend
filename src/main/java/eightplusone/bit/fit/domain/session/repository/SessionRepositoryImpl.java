@@ -17,7 +17,7 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
-import eightplusone.bit.fit.domain.tag.dto.TagResponseDto;
+import eightplusone.bit.fit.domain.tag.dto.TagDto;
 import lombok.RequiredArgsConstructor;
 
 @Repository
@@ -27,7 +27,7 @@ public class SessionRepositoryImpl implements SessionRepositoryCustom {
 	private final JPAQueryFactory queryFactory;
 
 	@Override
-	public Page<Object[]> tagFilterAndSearch(Pageable pageable, TagResponseDto dto) {
+	public Page<Object[]> tagFilterAndSearch(Pageable pageable, TagDto dto) {
 		List<Tuple> results = queryFactory
 			.select(session, tag, speaker)
 			.from(session)
