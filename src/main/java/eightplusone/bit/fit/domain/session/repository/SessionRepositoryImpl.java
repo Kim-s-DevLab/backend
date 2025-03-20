@@ -1,4 +1,4 @@
-package eightplusone.bit.fit.domain.tag.repository;
+package eightplusone.bit.fit.domain.session.repository;
 
 import static eightplusone.bit.fit.domain.session.entity.QSession.*;
 import static eightplusone.bit.fit.domain.speaker.entity.QSpeaker.*;
@@ -22,7 +22,7 @@ import lombok.RequiredArgsConstructor;
 
 @Repository
 @RequiredArgsConstructor
-public class TagRepositoryImpl implements TagRepositoryCustom {
+public class SessionRepositoryImpl implements SessionRepositoryCustom {
 
 	private final JPAQueryFactory queryFactory;
 

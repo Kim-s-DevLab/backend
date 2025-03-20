@@ -29,7 +29,6 @@ import eightplusone.bit.fit.domain.session.repository.SessionRepository;
 import eightplusone.bit.fit.domain.speaker.entity.Speaker;
 import eightplusone.bit.fit.domain.tag.dto.TagResponseDto;
 import eightplusone.bit.fit.domain.tag.entity.Tag;
-import eightplusone.bit.fit.domain.tag.repository.TagRepository;
 import eightplusone.bit.fit.support.fixture.SessionFixture;
 import eightplusone.bit.fit.support.fixture.SpeakerFixture;
 import eightplusone.bit.fit.support.fixture.TagFixture;
@@ -48,8 +47,8 @@ class SessionServiceTest {
 	@InjectMocks
 	private SessionService sessionService;
 
-	@Mock
-	private TagRepository tagRepository;
+	// @Mock
+	// private TagRepository tagRepository;
 
 	@BeforeEach
 	void setUp() {
@@ -159,7 +158,7 @@ class SessionServiceTest {
 
 		long count = filteredData.size();
 
-		when(tagRepository.tagFilterAndSearch(pageable, tagDto))
+		when(sessionRepository.tagFilterAndSearch(pageable, tagDto))
 			.thenReturn(new PageImpl<>(filteredData, pageable, count));
 
 		// when
@@ -219,7 +218,7 @@ class SessionServiceTest {
 
 		Page<Object[]> mockPage = new PageImpl<>(mockData, pageable, mockData.size());
 
-		when(tagRepository.tagFilterAndSearch(pageable, null)).thenReturn(mockPage);
+		when(sessionRepository.tagFilterAndSearch(pageable, null)).thenReturn(mockPage);
 
 		// when
 		Page<SessionListResponseDto> result = sessionService.getSessionsList(pageable, null);
