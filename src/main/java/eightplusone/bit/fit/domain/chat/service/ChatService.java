@@ -117,6 +117,12 @@ public class ChatService {
 		return chatLikeRepository.getLikeCount(messageId);
 	}
 
+	// 사용자가 해당 메시지에 좋아요를 눌렀는지 확인
+	public boolean hasLiked(String userId, Long sessionId, String messageId) {
+		String likeKey = "like:" + sessionId + ":" + messageId; // 세션 ID 포함
+		return chatLikeRepository.hasLiked(likeKey, userId);
+	}
+
 	// 특정 세션의 QUESTION 메시지를 좋아요 기준으로 정렬
 	public List<ChatMessageDto> getSortedQuestionMessages(Long sessionId) {
 		if (!chatRepository.existsBySessionId(String.valueOf(sessionId))) {
