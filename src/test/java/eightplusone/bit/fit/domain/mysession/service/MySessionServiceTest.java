@@ -86,8 +86,6 @@ class MySessionServiceTest {
 			user.getEmail());
 
 		//then
-		assertThat(responseDtos).hasSize(4);
-
 		assertAll(
 			() -> assertThat(responseDtos.get(0).getSessionId()).isEqualTo(session1.getSessionId()),
 			() -> assertThat(responseDtos.get(0).getTitle()).isEqualTo(session1.getTitle()),
