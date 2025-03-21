@@ -127,15 +127,22 @@ public class CallHandler extends TextWebSocketHandler {
 			jsonMessage.get("candidate").getAsJsonObject().get("sdpMid").getAsString(),
 			jsonMessage.get("candidate").getAsJsonObject().get("sdpMLineIndex").getAsInt()
 		);
+		log.info("ICE Candidate received from user '{}' in room '{}': {}",
+			session.getAttributes().get("userId"), room.getName(), candidate.getCandidate());
 
 		if (room.getPresenterUserSession() != null && room.getPresenterUserSession().getSession().equals(session)) {
+			log.info("Presenter ICE Candidate added for room '{}'", room.getName());
+			// 발표자
 			room.getPresenterUserSession().addCandidate(candidate);
 			return;
 		}
-
+		// 시청자
 		room.getViewers().stream()
 			.filter(v -> v.getSession().equals(session))
-			.findFirst().ifPresent(user -> user.addCandidate(candidate));
+			.findFirst().ifPresent(user -> {
+				log.info("Viewer ICE Candidate added for room '{}'", room.getName());
+				user.addCandidate(candidate);
+			});
 
 	}
 
