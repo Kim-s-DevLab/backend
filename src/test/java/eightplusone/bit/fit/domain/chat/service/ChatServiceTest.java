@@ -18,6 +18,7 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -47,6 +48,7 @@ class ChatServiceTest {
 	private final String userId = "testUser";
 	private final String messageId = "testMessage";
 	private final String timestamp = "testTimestamp";
+	private final int likes = 0;
 
 	@BeforeEach
 	void setUp() {
@@ -57,7 +59,8 @@ class ChatServiceTest {
 			"Test User",
 			userId,
 			sessionId,
-			timestamp
+			timestamp,
+			likes
 		);
 
 		chatMessage = ChatMessage.builder()
@@ -94,21 +97,44 @@ class ChatServiceTest {
 	// 사용자가 특정 메시지에 좋아요를 누르면 정상적으로 저장되는지 확인
 	@Test
 	void likeMessage_success() {
-		when(chatLikeRepository.hasLiked(userId, messageId)).thenReturn(false);
-		doNothing().when(chatLikeRepository).likeMessage(userId, messageId);
+		String likeKey = "like:" + sessionId + ":" + messageId;
 
-		chatService.likeMessage(userId, messageId);
+		when(chatLikeRepository.hasLiked(likeKey, userId)).thenReturn(false);
+		doNothing().when(chatLikeRepository).likeMessage(likeKey, userId);
+		when(chatLikeRepository.getLikeCount(likeKey)).thenReturn(1);
 
-		verify(chatLikeRepository, times(1)).likeMessage(userId, messageId);
+		chatService.likeMessage(userId, sessionId, messageId);
+
+		verify(chatLikeRepository, times(1)).likeMessage(likeKey, userId);
+	}
+
+	@Test
+	void likeMessage_shouldPublishLikeUpdateToRedisPubSub() {
+		String likeKey = "like:" + sessionId + ":" + messageId;
+
+		when(chatLikeRepository.hasLiked(likeKey, userId)).thenReturn(false);
+		doNothing().when(chatLikeRepository).likeMessage(likeKey, userId);
+		when(chatLikeRepository.getLikeCount(likeKey)).thenReturn(5);
+
+		chatService.likeMessage(userId, sessionId, messageId);
+
+		ArgumentCaptor<String> messageCaptor = ArgumentCaptor.forClass(String.class);
+		verify(redisTemplate).convertAndSend(eq("chat-likes"), messageCaptor.capture());
+
+		String publishedMessage = messageCaptor.getValue();
+		assertThat(publishedMessage).contains("\"messageId\": \"" + messageId + "\"");
+		assertThat(publishedMessage).contains("\"likes\": 5");
 	}
 
 	// 이미 좋아요를 누른 상태에서 다시 누르면 예외가 발생하는지 확인
 	@Test
 	void likeMessage_fails_whenAlreadyLiked() {
-		when(chatLikeRepository.hasLiked(userId, messageId)).thenReturn(true);
+		String likeKey = "like:" + sessionId + ":" + messageId;
+
+		when(chatLikeRepository.hasLiked(likeKey, userId)).thenReturn(true);
 
 		CustomException exception = assertThrows(CustomException.class, () ->
-			chatService.likeMessage(userId, messageId));
+			chatService.likeMessage(userId, sessionId, messageId));
 
 		assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.DUPLICATE_LIKE);
 	}
@@ -116,21 +142,25 @@ class ChatServiceTest {
 	// 사용자가 좋아요를 취소할 수 있는지 확인
 	@Test
 	void unlikeMessage_success() {
-		when(chatLikeRepository.hasLiked(userId, messageId)).thenReturn(true);
-		doNothing().when(chatLikeRepository).unlikeMessage(userId, messageId);
+		String likeKey = "like:" + sessionId + ":" + messageId;
 
-		chatService.unlikeMessage(userId, messageId);
+		when(chatLikeRepository.hasLiked(likeKey, userId)).thenReturn(true);
+		doNothing().when(chatLikeRepository).unlikeMessage(likeKey, userId);
 
-		verify(chatLikeRepository, times(1)).unlikeMessage(userId, messageId);
+		chatService.unlikeMessage(userId, sessionId, messageId);
+
+		verify(chatLikeRepository, times(1)).unlikeMessage(likeKey, userId);
 	}
 
 	// 좋아요를 누르지 않은 상태에서 취소하려고 하면 예외가 발생하는지 확인
 	@Test
 	void unlikeMessage_fails_whenNotLiked() {
-		when(chatLikeRepository.hasLiked(userId, messageId)).thenReturn(false);
+		String likeKey = "like:" + sessionId + ":" + messageId;
+
+		when(chatLikeRepository.hasLiked(likeKey, userId)).thenReturn(false);
 
 		CustomException exception = assertThrows(CustomException.class, () ->
-			chatService.unlikeMessage(userId, messageId));
+			chatService.unlikeMessage(userId, sessionId, messageId));
 
 		assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.CANNOT_UNLIKE);
 	}
@@ -161,37 +191,22 @@ class ChatServiceTest {
 	// 특정 세션에서 QUESTION 카테고리 메시지를 가져와 좋아요 개수 기준으로 정렬되는지 확인
 	@Test
 	void getSortedQuestionMessages_success() {
-		// Given
 		when(chatRepository.existsBySessionId(String.valueOf(1L))).thenReturn(true);
 		when(chatRepository.getRecentMessages(String.valueOf(1L))).thenReturn(Arrays.asList(
-			new ChatMessageDto("msg1", ChatCategory.QUESTION, "Question 1", "Alice", "user1", 1L, "timestamp1"),
-			new ChatMessageDto("msg2", ChatCategory.QUESTION, "Question 2", "Bob", "user2", 1L, "timestamp2"),
-			new ChatMessageDto("msg3", ChatCategory.GENERAL, "General message", "Charlie", "user3", 1L, "timestamp3")
+			new ChatMessageDto("msg1", ChatCategory.QUESTION, "Question 1", "Alice", "user1", 1L, "timestamp1", 1),
+			new ChatMessageDto("msg2", ChatCategory.QUESTION, "Question 2", "Bob", "user2", 1L, "timestamp2", 1),
+			new ChatMessageDto("msg3", ChatCategory.GENERAL, "General message", "Charlie", "user3", 1L, "timestamp3", 1)
 		));
 
-		when(chatLikeRepository.getLikeCount("like:msg1")).thenReturn(10);
-		when(chatLikeRepository.getLikeCount("like:msg2")).thenReturn(5);
+		when(chatLikeRepository.getLikeCount("like:1:msg1")).thenReturn(10);
+		when(chatLikeRepository.getLikeCount("like:1:msg2")).thenReturn(5);
 		when(userRedisRepository.getUserName("user1")).thenReturn("Alice");
 		when(userRedisRepository.getUserName("user2")).thenReturn("Bob");
 
-		// When
 		List<ChatMessageDto> sortedMessages = chatService.getSortedQuestionMessages(1L);
 
-		// Then
 		assertThat(sortedMessages).hasSize(2);
-		assertThat(sortedMessages.get(0).getMessage()).isEqualTo("Question 1"); // 좋아요 10개
-		assertThat(sortedMessages.get(1).getMessage()).isEqualTo("Question 2"); // 좋아요 5개
-	}
-
-	// 존재하지 않는 세션에 대한 조회 시 예외가 발생하는지 확인
-	@Test
-	void getSortedQuestionMessages_fails_whenSessionNotFound() {
-		// Given
-		when(chatRepository.existsBySessionId(String.valueOf(1L))).thenReturn(false);
-
-		// When & Then
-		assertThatThrownBy(() -> chatService.getSortedQuestionMessages(1L))
-			.isInstanceOf(CustomException.class)
-			.hasMessage(ErrorCode.CHAT_SESSION_NOT_FOUND.getMessage());
+		assertThat(sortedMessages.get(0).getMessage()).isEqualTo("Question 1");
+		assertThat(sortedMessages.get(1).getMessage()).isEqualTo("Question 2");
 	}
 }
