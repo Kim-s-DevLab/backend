@@ -34,8 +34,7 @@ public class ChatLikeRepository {
 	}
 
 	// 사용자가 해당 메시지에 좋아요를 눌렀는지 확인
-	public boolean hasLiked(String userId, Long sessionId, String messageId) {
-		String likeKey = "like:" + sessionId + ":" + messageId;
+	public boolean hasLiked(String likeKey, String userId) {
 		return Boolean.TRUE.equals(redisTemplate.opsForSet().isMember(likeKey, userId));
 	}
 }
