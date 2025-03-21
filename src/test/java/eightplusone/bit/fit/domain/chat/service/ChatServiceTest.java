@@ -246,7 +246,6 @@ class ChatServiceTest {
 		when(chatRepository.getRecentMessages(String.valueOf(sessionId))).thenReturn(List.of(dto1, dto2, dto3));
 
 		when(userRedisRepository.getUserName("user1")).thenReturn("User1");
-		when(userRedisRepository.getUserName("user2")).thenReturn("User2");
 		when(userRedisRepository.getUserName("user3")).thenReturn("User3");
 
 		when(chatLikeRepository.getLikeCount("like:1:msg1")).thenReturn(5);
