@@ -19,15 +19,6 @@ public class ChatLikeRepository {
 
 		// 좋아요 추가
 		redisTemplate.opsForSet().add(likeKey, userId);
-
-		// 좋아요 개수 조회
-		int updatedLikeCount = getLikeCount(messageId);
-
-		// 좋아요 개수를 Redis Pub/Sub을 통해 전송
-		String redisMessage = "{\"messageId\": \"" + messageId + "\", \"likes\": " + updatedLikeCount + "}";
-		redisTemplate.convertAndSend("chat-likes", redisMessage);
-
-		log.info("좋아요 변경사항 Redis Pub/Sub 전송: {}", redisMessage);
 	}
 
 	// 좋아요 취소
