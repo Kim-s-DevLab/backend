@@ -17,8 +17,10 @@ package eightplusone.bit.fit.global.websocket;
  *
  */
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
-import com.google.gson.JsonObject;
 import org.kurento.client.IceCandidate;
 import org.kurento.client.WebRtcEndpoint;
 import org.slf4j.Logger;
@@ -26,7 +28,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
-import java.io.IOException;
+import com.google.gson.JsonObject;
+
+import lombok.Getter;
 
 /**
  * User session.
@@ -36,42 +40,59 @@ import java.io.IOException;
  */
 public class UserSession {
 
-    private static final Logger log = LoggerFactory.getLogger(UserSession.class);
+	private static final Logger log = LoggerFactory.getLogger(UserSession.class);
 
-    private final WebSocketSession session;
-    private WebRtcEndpoint webRtcEndpoint;
+	@Getter
+	private final WebSocketSession session;
 
-    public UserSession(WebSocketSession session) {
-        this.session = session;
-    }
+	@Getter
+	private WebRtcEndpoint webRtcEndpoint;
 
-    public WebSocketSession getSession() {
-        return session;
-    }
+	// ICE Candidate를 임시 저장할 큐(또는 리스트)
+	private final List<IceCandidate> candidateQueue = new ArrayList<>();
 
-    public void sendMessage(JsonObject message) throws IOException {
-        log.debug("Sending message from user with session Id '{}': {}", session.getId(), message);
-        session.sendMessage(new TextMessage(message.toString()));
-    }
+	private boolean endpointReady = false;
 
-    public WebRtcEndpoint getWebRtcEndpoint() {
-        return webRtcEndpoint;
-    }
+	public UserSession(WebSocketSession session) {
+		this.session = session;
+	}
 
-    public void setWebRtcEndpoint(WebRtcEndpoint webRtcEndpoint) {
-        this.webRtcEndpoint = webRtcEndpoint;
-    }
+	public void sendMessage(JsonObject message) throws IOException {
+		log.debug("Sending message from user with session Id '{}': {}", session.getId(), message);
+		session.sendMessage(new TextMessage(message.toString()));
+	}
 
-    public void addCandidate(IceCandidate candidate) {
-        webRtcEndpoint.addIceCandidate(candidate);
-    }
+	public synchronized void addCandidate(IceCandidate candidate) {
+		// 아직 endpoint가 준비되지 않았다면, candidateQueue에 쌓아둠
+		if (!endpointReady || webRtcEndpoint == null) {
+			candidateQueue.add(candidate);
+		} else {
+			log.info("Kurento: ICE Candidate added for session '{}': {}", session.getId(), candidate.getCandidate());
+			webRtcEndpoint.addIceCandidate(candidate);
+		}
+	}
 
-    public void close() throws IOException {
-        if (webRtcEndpoint != null) {
-            webRtcEndpoint.release();
-        }
-        if (session.isOpen()) {
-            session.close();
-        }
-    }
+	// 아직 endpointReady=false 이므로, ICE는 버퍼에만 쌓인다.
+	public synchronized void setWebRtcEndpoint(WebRtcEndpoint endpoint) {
+		this.webRtcEndpoint = endpoint;
+	}
+
+	public synchronized void markEndpointReady() {
+		this.endpointReady = true;
+
+		// 버퍼에 쌓인 ICE Candidate가 있다면, 모두 반영
+		for (IceCandidate candidate : candidateQueue) {
+			webRtcEndpoint.addIceCandidate(candidate);
+		}
+		candidateQueue.clear();
+	}
+
+	public void close() throws IOException {
+		if (webRtcEndpoint != null) {
+			webRtcEndpoint.release();
+		}
+		if (session.isOpen()) {
+			session.close();
+		}
+	}
 }
