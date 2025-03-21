@@ -78,8 +78,6 @@ class MySessionServiceTest {
 
 		mySessionRepository.save(MySession.register(user, session1));
 		mySessionRepository.save(MySession.register(user, session2));
-		mySessionRepository.save(MySession.register(user, session3));
-		mySessionRepository.save(MySession.register(user, session4));
 
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyMMddHHmm");
 
@@ -88,6 +86,8 @@ class MySessionServiceTest {
 			user.getEmail());
 
 		//then
+		assertThat(responseDtos).hasSize(4);
+
 		assertAll(
 			() -> assertThat(responseDtos.get(0).getSessionId()).isEqualTo(session1.getSessionId()),
 			() -> assertThat(responseDtos.get(0).getTitle()).isEqualTo(session1.getTitle()),
@@ -99,6 +99,7 @@ class MySessionServiceTest {
 				session1.getStartTime().format(formatter)),
 			() -> assertThat(responseDtos.get(0).getEndTime()).isEqualTo(
 				session1.getEndTime().format(formatter)),
+			() -> assertThat(responseDtos.get(0).getIsMySchedule()).isTrue(),
 
 			() -> assertThat(responseDtos.get(1).getSessionId()).isEqualTo(session2.getSessionId()),
 			() -> assertThat(responseDtos.get(1).getTitle()).isEqualTo(session2.getTitle()),
@@ -110,6 +111,7 @@ class MySessionServiceTest {
 				session2.getStartTime().format(formatter)),
 			() -> assertThat(responseDtos.get(1).getEndTime()).isEqualTo(
 				session2.getEndTime().format(formatter)),
+			() -> assertThat(responseDtos.get(1).getIsMySchedule()).isTrue(),
 
 			() -> assertThat(responseDtos.get(2).getSessionId()).isEqualTo(session3.getSessionId()),
 			() -> assertThat(responseDtos.get(2).getTitle()).isEqualTo(session3.getTitle()),
@@ -121,6 +123,7 @@ class MySessionServiceTest {
 				session3.getStartTime().format(formatter)),
 			() -> assertThat(responseDtos.get(2).getEndTime()).isEqualTo(
 				session3.getEndTime().format(formatter)),
+			() -> assertThat(responseDtos.get(2).getIsMySchedule()).isFalse(),
 
 			() -> assertThat(responseDtos.get(3).getSessionId()).isEqualTo(session4.getSessionId()),
 			() -> assertThat(responseDtos.get(3).getTitle()).isEqualTo(session4.getTitle()),
@@ -131,7 +134,8 @@ class MySessionServiceTest {
 			() -> assertThat(responseDtos.get(3).getStartTime()).isEqualTo(
 				session4.getStartTime().format(formatter)),
 			() -> assertThat(responseDtos.get(3).getEndTime()).isEqualTo(
-				session4.getEndTime().format(formatter))
+				session4.getEndTime().format(formatter)),
+			() -> assertThat(responseDtos.get(3).getIsMySchedule()).isFalse()
 		);
 	}
 
