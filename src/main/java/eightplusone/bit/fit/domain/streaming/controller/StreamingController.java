@@ -1,10 +1,12 @@
 package eightplusone.bit.fit.domain.streaming.controller;
 
+import org.kurento.client.IceCandidate;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
 
+import eightplusone.bit.fit.domain.streaming.dto.IceCandidateDto;
 import eightplusone.bit.fit.domain.streaming.service.RoomService;
 import lombok.extern.slf4j.Slf4j;
 
@@ -33,6 +35,20 @@ public class StreamingController {
 			log.error("Exception in handlePresenterOffer: ", e);
 			throw e; // Rethrow or handle
 		}
+	}
+
+	/**
+	 * 발표자 ICE 후보 수신
+	 */
+
+	@MessageMapping("/room/{roomId}/presenterIce")
+	public void handlePresenterIceCandidate(@DestinationVariable String roomId, IceCandidateDto candidateDto) {
+		IceCandidate candidate = new IceCandidate(
+			candidateDto.getCandidate(),
+			candidateDto.getSdpMid(),
+			candidateDto.getSdpMLineIndex()
+		);
+		roomService.addPresenterIceCandidate(roomId, candidate);
 	}
 
 }
