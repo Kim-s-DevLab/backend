@@ -83,4 +83,47 @@ public class RoomService {
 			room.getPresenterEndpoint().addIceCandidate(candidate);
 		}
 	}
+
+	public String processAudienceOffer(String roomId, String audienceEmail, String sdpOffer) {
+		AudioRoom room = getOrCreateRoom(roomId);
+
+		WebRtcEndpoint presenterEndpoint = room.getPresenterEndpoint();
+
+		Map<String, WebRtcEndpoint> audienceMap = room.getAudienceEndpoints();
+		if (audienceMap.containsKey(audienceEmail)) {
+			WebRtcEndpoint oldEndpoint = audienceMap.get(audienceEmail);
+			oldEndpoint.release();
+			audienceMap.remove(audienceEmail);
+		}
+
+		// 새 청중 WebRtcEndpoint 생성
+		WebRtcEndpoint audienceEndpoint = kurentoService.createWebRtcEndpoint(room.getPipeline());
+		room.getAudienceEndpoints().put(audienceEmail, audienceEndpoint);
+
+		// 발표자 -> 청중 연결
+		if (presenterEndpoint != null) {
+			presenterEndpoint.connect(audienceEndpoint);
+		}
+
+		int audioChannel = Integer.parseInt(roomId);
+		sessionService.checkIn(audienceEmail);
+		sessionService.updateAndBroadcastIfChanged(audioChannel);
+
+		// 청중 ICE 후보 -> 클라이언트
+		audienceEndpoint.addIceCandidateFoundListener(event -> {
+			IceCandidate candidate = event.getCandidate();
+			IceCandidateDto dto = IceCandidateDto.from(candidate);
+
+			// /sub/room/{roomId}/audience/iceCandidate
+			messagingTemplate.convertAndSend(
+				"/sub/room/" + roomId + "/audience/iceCandidate",
+				dto
+			);
+		});
+
+		String sdpAnswer = audienceEndpoint.processOffer(sdpOffer);
+		audienceEndpoint.gatherCandidates();
+		return sdpAnswer;
+	}
+
 }
