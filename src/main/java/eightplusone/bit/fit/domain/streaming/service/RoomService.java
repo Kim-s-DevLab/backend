@@ -126,4 +126,17 @@ public class RoomService {
 		return sdpAnswer;
 	}
 
+	// 청중 ICE 추가
+	public void addAudienceIceCandidate(String roomId, String audienceId, IceCandidate candidate) {
+		AudioRoom room = rooms.get(roomId);
+		if (room == null)
+			return;
+
+		WebRtcEndpoint endpoint = room.getAudienceEndpoints().get(audienceId);
+		if (endpoint != null) {
+			log.info("[Audience] addIceCandidate: {}", candidate);
+			endpoint.addIceCandidate(candidate);
+		}
+	}
+
 }
