@@ -1,7 +1,10 @@
 package eightplusone.bit.fit.domain.streaming.controller;
 
+import java.security.Principal;
+
 import org.kurento.client.IceCandidate;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
+import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
@@ -49,6 +52,22 @@ public class StreamingController {
 			candidateDto.getSdpMLineIndex()
 		);
 		roomService.addPresenterIceCandidate(roomId, candidate);
+	}
+	/**
+	 * 발표자 ICE 후보 수신
+	 */
+
+	/**
+	 * 청중 SDP Offer 처리 -> SDP Answer 반환
+	 */
+	@MessageMapping("/room/{roomId}/audience")
+	@SendTo("/sub/room/{roomId}/audience/answer")
+	public String handleAudienceOffer(
+		@DestinationVariable String roomId,
+		@Header("simpUser") Principal principal,
+		String sdpOffer
+	) {
+		return roomService.processAudienceOffer(roomId, principal.getName(), sdpOffer);
 	}
 
 }
