@@ -53,9 +53,6 @@ public class StreamingController {
 		);
 		roomService.addPresenterIceCandidate(roomId, candidate);
 	}
-	/**
-	 * 발표자 ICE 후보 수신
-	 */
 
 	/**
 	 * 청중 SDP Offer 처리 -> SDP Answer 반환
@@ -70,4 +67,16 @@ public class StreamingController {
 		return roomService.processAudienceOffer(roomId, principal.getName(), sdpOffer);
 	}
 
+	/**
+	 * 청중 ICE 후보 수신
+	 */
+	@MessageMapping("/room/{roomId}/audience/ice")
+	public void handleAudienceIceCandidate(
+		@DestinationVariable String roomId,
+		@Header("simpUser") Principal principal,
+		IceCandidateDto dto
+	) {
+		IceCandidate candidate = new IceCandidate(dto.getCandidate(), dto.getSdpMid(), dto.getSdpMLineIndex());
+		roomService.addAudienceIceCandidate(roomId, principal.getName(), candidate);
+	}
 }
