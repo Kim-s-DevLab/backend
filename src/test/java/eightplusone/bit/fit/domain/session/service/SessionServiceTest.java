@@ -22,16 +22,23 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 
+import eightplusone.bit.fit.domain.auth.dto.CustomUserDetails;
+import eightplusone.bit.fit.domain.mysession.entity.MySession;
 import eightplusone.bit.fit.domain.session.dto.SessionListResponseDto;
 import eightplusone.bit.fit.domain.session.entity.Session;
 import eightplusone.bit.fit.domain.session.repository.SessionRepository;
 import eightplusone.bit.fit.domain.speaker.entity.Speaker;
 import eightplusone.bit.fit.domain.tag.dto.TagDto;
 import eightplusone.bit.fit.domain.tag.entity.Tag;
+import eightplusone.bit.fit.domain.user.entity.User;
+import eightplusone.bit.fit.domain.user.repository.UserRepository;
 import eightplusone.bit.fit.support.fixture.SessionFixture;
 import eightplusone.bit.fit.support.fixture.SpeakerFixture;
 import eightplusone.bit.fit.support.fixture.TagFixture;
+import eightplusone.bit.fit.support.fixture.UserFixture;
 
 class SessionServiceTest {
 
@@ -46,6 +53,9 @@ class SessionServiceTest {
 
 	@InjectMocks
 	private SessionService sessionService;
+
+	@Mock
+	private UserRepository userRepository;
 
 	@BeforeEach
 	void setUp() {
@@ -130,7 +140,7 @@ class SessionServiceTest {
 	}
 
 	@Test
-	@DisplayName("태그를 기반으로 세션 목록을 조회한다")
+	@DisplayName("태그를 기반으로 세션 목록을 조회한다. (로그인 X)")
 	void getSessionsList() {
 		// given
 		Pageable pageable = PageRequest.of(0, 10);
@@ -146,17 +156,13 @@ class SessionServiceTest {
 		TagDto tagDto = TagDto.from(tag1);
 
 		List<Object[]> mockData = new ArrayList<>();
-		mockData.add(new Object[] {session1, tag1, speaker1});
-		mockData.add(new Object[] {session4, tag1, speaker4});
+		mockData.add(new Object[] {session1, tag1, speaker1, null});
+		mockData.add(new Object[] {session4, tag1, speaker4, null});
 
-		List<Object[]> filteredData = mockData.stream()
-			.filter(data -> ((Tag)data[1]).getField().equals(tagDto.getField()))
-			.toList();
+		Page<Object[]> mockPage = new PageImpl<>(mockData, pageable, mockData.size());
 
-		long count = filteredData.size();
-
-		when(sessionRepository.tagFilterAndSearch(pageable, tagDto))
-			.thenReturn(new PageImpl<>(filteredData, pageable, count));
+		when(sessionRepository.tagFilterAndSearch(pageable, tagDto, null))
+			.thenReturn(mockPage);
 
 		// when
 		Page<SessionListResponseDto> result = sessionService.getSessionsList(pageable, tagDto);
@@ -171,15 +177,74 @@ class SessionServiceTest {
 			() -> assertThat(content.get(0).getTitle()).isEqualTo(session1.getTitle()),
 			() -> assertThat(content.get(0).getSpeaker().getName()).isEqualTo(speaker1.getName()),
 			() -> assertThat(content.get(0).getTags().getField()).isEqualTo(tag1.getField()),
+			() -> assertThat(content.get(0).getIsMySession()).isFalse(),
 
 			() -> assertThat(content.get(1).getTitle()).isEqualTo(session4.getTitle()),
 			() -> assertThat(content.get(1).getSpeaker().getName()).isEqualTo(speaker4.getName()),
-			() -> assertThat(content.get(1).getTags().getField()).isEqualTo(tag1.getField())
+			() -> assertThat(content.get(1).getTags().getField()).isEqualTo(tag1.getField()),
+			() -> assertThat(content.get(0).getIsMySession()).isFalse()
 		);
 	}
 
 	@Test
-	@DisplayName("세션 목록을 전체 조회한다")
+	@DisplayName("태그를 기반으로 세션 목록을 조회한다. (로그인 O)")
+	void getSessionsList_Login() {
+		// given
+		Pageable pageable = PageRequest.of(0, 10);
+
+		User user = UserFixture.USER_FIXTURE_1.createUser();
+		setField(user, "id", 1L);
+		CustomUserDetails userDetails = new CustomUserDetails(user);
+		UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+			userDetails, null, userDetails.getAuthorities());
+		SecurityContextHolder.getContext().setAuthentication(authentication);
+
+		Session session1 = SessionFixture.SESSION_STAGE_1_FIXTURE_1.createSession();
+		Session session4 = SessionFixture.SESSION_STAGE_2_FIXTURE_1.createSession();
+		setField(session1, "sessionId", 1L);
+
+		Speaker speaker1 = SpeakerFixture.SPEAKER_FIXTURE_1.createSpeaker();
+		Speaker speaker4 = SpeakerFixture.SPEAKER_FIXTURE_4.createSpeaker();
+
+		Tag tag1 = TagFixture.TAG_FIXTURE_1.createTag();
+
+		TagDto tagDto = TagDto.from(tag1);
+
+		MySession.register(user, session1);
+
+		List<Object[]> mockData = new ArrayList<>();
+		mockData.add(new Object[] {session1, tag1, speaker1, session1.getSessionId()});
+		mockData.add(new Object[] {session4, tag1, speaker4, null});
+
+		Page<Object[]> mockPage = new PageImpl<>(mockData, pageable, mockData.size());
+
+		when(userRepository.findLoginUserByEmail(user.getEmail())).thenReturn(user);
+		when(sessionRepository.tagFilterAndSearch(pageable, tagDto, user.getId())).thenReturn(mockPage);
+
+		// when
+		Page<SessionListResponseDto> result = sessionService.getSessionsList(pageable, tagDto);
+
+		// then
+		assertThat(result).isNotNull();
+		assertThat(result.getContent()).hasSize(2);
+
+		List<SessionListResponseDto> content = result.getContent();
+
+		assertAll(
+			() -> assertThat(content.get(0).getTitle()).isEqualTo(session1.getTitle()),
+			() -> assertThat(content.get(0).getSpeaker().getName()).isEqualTo(speaker1.getName()),
+			() -> assertThat(content.get(0).getTags().getField()).isEqualTo(tag1.getField()),
+			() -> assertThat(content.get(0).getIsMySession()).isTrue(),
+
+			() -> assertThat(content.get(1).getTitle()).isEqualTo(session4.getTitle()),
+			() -> assertThat(content.get(1).getSpeaker().getName()).isEqualTo(speaker4.getName()),
+			() -> assertThat(content.get(1).getTags().getField()).isEqualTo(tag1.getField()),
+			() -> assertThat(content.get(1).getIsMySession()).isFalse()
+		);
+	}
+
+	@Test
+	@DisplayName("세션 목록을 전체 조회한다. (로그인 X)")
 	void getAllSessionsList() {
 		// given
 		Pageable pageable = PageRequest.of(0, 10);
@@ -206,16 +271,16 @@ class SessionServiceTest {
 		Tag tag6 = TagFixture.TAG_FIXTURE_6.createTag();
 
 		List<Object[]> mockData = new ArrayList<>();
-		mockData.add(new Object[] {session1, tag1, speaker1});
-		mockData.add(new Object[] {session2, tag2, speaker2});
-		mockData.add(new Object[] {session3, tag3, speaker3});
-		mockData.add(new Object[] {session4, tag4, speaker4});
-		mockData.add(new Object[] {session5, tag5, speaker5});
-		mockData.add(new Object[] {session6, tag6, speaker6});
+		mockData.add(new Object[] {session1, tag1, speaker1, null});
+		mockData.add(new Object[] {session2, tag2, speaker2, null});
+		mockData.add(new Object[] {session3, tag3, speaker3, null});
+		mockData.add(new Object[] {session4, tag4, speaker4, null});
+		mockData.add(new Object[] {session5, tag5, speaker5, null});
+		mockData.add(new Object[] {session6, tag6, speaker6, null});
 
 		Page<Object[]> mockPage = new PageImpl<>(mockData, pageable, mockData.size());
 
-		when(sessionRepository.tagFilterAndSearch(pageable, null)).thenReturn(mockPage);
+		when(sessionRepository.tagFilterAndSearch(pageable, null, null)).thenReturn(mockPage);
 
 		// when
 		Page<SessionListResponseDto> result = sessionService.getSessionsList(pageable, null);
@@ -254,7 +319,102 @@ class SessionServiceTest {
 	}
 
 	@Test
-	@DisplayName("라이브 중인 세션을 조회한다")
+	@DisplayName("세션 목록을 전체 조회한다. (로그인 O)")
+	void getAllSessionsList_Login() {
+		// given
+		Pageable pageable = PageRequest.of(0, 10);
+
+		User user = UserFixture.USER_FIXTURE_1.createUser();
+		setField(user, "id", 1L);
+		CustomUserDetails userDetails = new CustomUserDetails(user);
+		UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+			userDetails, null, userDetails.getAuthorities());
+		SecurityContextHolder.getContext().setAuthentication(authentication);
+
+		Session session1 = SessionFixture.SESSION_STAGE_1_FIXTURE_1.createSession();
+		Session session2 = SessionFixture.SESSION_STAGE_1_FIXTURE_2.createSession();
+		Session session3 = SessionFixture.SESSION_STAGE_1_FIXTURE_3.createSession();
+		Session session4 = SessionFixture.SESSION_STAGE_2_FIXTURE_1.createSession();
+		Session session5 = SessionFixture.SESSION_STAGE_2_FIXTURE_2.createSession();
+		Session session6 = SessionFixture.SESSION_STAGE_2_FIXTURE_3.createSession();
+
+		setField(session1, "sessionId", 1L);
+		setField(session2, "sessionId", 2L);
+
+		Speaker speaker1 = SpeakerFixture.SPEAKER_FIXTURE_1.createSpeaker();
+		Speaker speaker2 = SpeakerFixture.SPEAKER_FIXTURE_2.createSpeaker();
+		Speaker speaker3 = SpeakerFixture.SPEAKER_FIXTURE_3.createSpeaker();
+		Speaker speaker4 = SpeakerFixture.SPEAKER_FIXTURE_4.createSpeaker();
+		Speaker speaker5 = SpeakerFixture.SPEAKER_FIXTURE_5.createSpeaker();
+		Speaker speaker6 = SpeakerFixture.SPEAKER_FIXTURE_6.createSpeaker();
+
+		Tag tag1 = TagFixture.TAG_FIXTURE_1.createTag();
+		Tag tag2 = TagFixture.TAG_FIXTURE_2.createTag();
+		Tag tag3 = TagFixture.TAG_FIXTURE_3.createTag();
+		Tag tag4 = TagFixture.TAG_FIXTURE_4.createTag();
+		Tag tag5 = TagFixture.TAG_FIXTURE_5.createTag();
+		Tag tag6 = TagFixture.TAG_FIXTURE_6.createTag();
+
+		MySession.register(user, session1);
+		MySession.register(user, session2);
+
+		List<Object[]> mockData = new ArrayList<>();
+		mockData.add(new Object[] {session1, tag1, speaker1, session1.getSessionId()});
+		mockData.add(new Object[] {session2, tag2, speaker2, session2.getSessionId()});
+		mockData.add(new Object[] {session3, tag3, speaker3, null});
+		mockData.add(new Object[] {session4, tag4, speaker4, null});
+		mockData.add(new Object[] {session5, tag5, speaker5, null});
+		mockData.add(new Object[] {session6, tag6, speaker6, null});
+
+		Page<Object[]> mockPage = new PageImpl<>(mockData, pageable, mockData.size());
+
+		when(userRepository.findLoginUserByEmail(user.getEmail())).thenReturn(user);
+		when(sessionRepository.tagFilterAndSearch(pageable, null, user.getId())).thenReturn(mockPage);
+
+		// when
+		Page<SessionListResponseDto> result = sessionService.getSessionsList(pageable, null);
+
+		// then
+		assertThat(result).isNotNull();
+		assertThat(result.getContent()).hasSize(6);
+
+		List<SessionListResponseDto> content = result.getContent();
+
+		assertAll(
+			() -> assertThat(content.get(0).getTitle()).isEqualTo(session1.getTitle()),
+			() -> assertThat(content.get(0).getSpeaker().getName()).isEqualTo(speaker1.getName()),
+			() -> assertThat(content.get(0).getTags().getField()).isEqualTo(tag1.getField()),
+			() -> assertThat(content.get(0).getIsMySession()).isTrue(),
+
+			() -> assertThat(content.get(1).getTitle()).isEqualTo(session2.getTitle()),
+			() -> assertThat(content.get(1).getSpeaker().getName()).isEqualTo(speaker2.getName()),
+			() -> assertThat(content.get(1).getTags().getField()).isEqualTo(tag2.getField()),
+			() -> assertThat(content.get(1).getIsMySession()).isTrue(),
+
+			() -> assertThat(content.get(2).getTitle()).isEqualTo(session3.getTitle()),
+			() -> assertThat(content.get(2).getSpeaker().getName()).isEqualTo(speaker3.getName()),
+			() -> assertThat(content.get(2).getTags().getField()).isEqualTo(tag3.getField()),
+			() -> assertThat(content.get(2).getIsMySession()).isFalse(),
+
+			() -> assertThat(content.get(3).getTitle()).isEqualTo(session4.getTitle()),
+			() -> assertThat(content.get(3).getSpeaker().getName()).isEqualTo(speaker4.getName()),
+			() -> assertThat(content.get(3).getTags().getField()).isEqualTo(tag4.getField()),
+			() -> assertThat(content.get(3).getIsMySession()).isFalse(),
+
+			() -> assertThat(content.get(4).getTitle()).isEqualTo(session5.getTitle()),
+			() -> assertThat(content.get(4).getSpeaker().getName()).isEqualTo(speaker5.getName()),
+			() -> assertThat(content.get(4).getTags().getField()).isEqualTo(tag5.getField()),
+			() -> assertThat(content.get(4).getIsMySession()).isFalse(),
+
+			() -> assertThat(content.get(5).getTitle()).isEqualTo(session6.getTitle()),
+			() -> assertThat(content.get(5).getSpeaker().getName()).isEqualTo(speaker6.getName()),
+			() -> assertThat(content.get(5).getTags().getField()).isEqualTo(tag6.getField()),
+			() -> assertThat(content.get(5).getIsMySession()).isFalse()
+		);
+	}
+
+	@Test
+	@DisplayName("라이브중인 세션을 조회한다. (로그인 X)")
 	void getLiveSessions() {
 		// given
 		Session session1 = SessionFixture.SESSION_STAGE_1_FIXTURE_1.createSession();
@@ -267,11 +427,11 @@ class SessionServiceTest {
 		Tag tag2 = TagFixture.TAG_FIXTURE_2.createTag();
 
 		List<Object[]> mockData = List.of(
-			new Object[] {session1, speaker1, tag1},
-			new Object[] {session2, speaker2, tag2}
+			new Object[] {session1, speaker1, tag1, null},
+			new Object[] {session2, speaker2, tag2, null}
 		);
 
-		when(sessionRepository.findLiveSessionsWithSpeakerAndTag()).thenReturn(mockData);
+		when(sessionRepository.findLiveSessionsWithSpeakerAndTag(null)).thenReturn(mockData);
 
 		// when
 		List<SessionListResponseDto> result = sessionService.getLiveSessions();
@@ -288,6 +448,57 @@ class SessionServiceTest {
 			() -> assertThat(result.get(1).getTitle()).isEqualTo(session2.getTitle()),
 			() -> assertThat(result.get(1).getSpeaker().getName()).isEqualTo(speaker2.getName()),
 			() -> assertThat(result.get(1).getTags().getField()).isEqualTo(tag2.getField())
+		);
+	}
+
+	@Test
+	@DisplayName("라이브중인 세션을 조회한다. (로그인 O)")
+	void getLiveSessions_Login() {
+		// given
+		User user = UserFixture.USER_FIXTURE_1.createUser();
+		setField(user, "id", 1L);
+		CustomUserDetails userDetails = new CustomUserDetails(user);
+		UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+			userDetails, null, userDetails.getAuthorities());
+		SecurityContextHolder.getContext().setAuthentication(authentication);
+
+		Session session1 = SessionFixture.SESSION_STAGE_1_FIXTURE_1.createSession();
+		Session session2 = SessionFixture.SESSION_STAGE_1_FIXTURE_2.createSession();
+
+		setField(session1, "sessionId", 1L);
+
+		Speaker speaker1 = SpeakerFixture.SPEAKER_FIXTURE_1.createSpeaker();
+		Speaker speaker2 = SpeakerFixture.SPEAKER_FIXTURE_2.createSpeaker();
+
+		Tag tag1 = TagFixture.TAG_FIXTURE_1.createTag();
+		Tag tag2 = TagFixture.TAG_FIXTURE_2.createTag();
+
+		MySession.register(user, session1);
+
+		List<Object[]> mockData = List.of(
+			new Object[] {session1, speaker1, tag1, session1.getSessionId()},
+			new Object[] {session2, speaker2, tag2, null}
+		);
+
+		when(sessionRepository.findLiveSessionsWithSpeakerAndTag(null)).thenReturn(mockData);
+
+		// when
+		List<SessionListResponseDto> result = sessionService.getLiveSessions();
+
+		// then
+		assertThat(result).isNotNull();
+		assertThat(result).hasSize(2);
+
+		assertAll(
+			() -> assertThat(result.get(0).getTitle()).isEqualTo(session1.getTitle()),
+			() -> assertThat(result.get(0).getSpeaker().getName()).isEqualTo(speaker1.getName()),
+			() -> assertThat(result.get(0).getTags().getField()).isEqualTo(tag1.getField()),
+			() -> assertThat(result.get(0).getIsMySession()).isTrue(),
+
+			() -> assertThat(result.get(1).getTitle()).isEqualTo(session2.getTitle()),
+			() -> assertThat(result.get(1).getSpeaker().getName()).isEqualTo(speaker2.getName()),
+			() -> assertThat(result.get(1).getTags().getField()).isEqualTo(tag2.getField()),
+			() -> assertThat(result.get(1).getIsMySession()).isFalse()
 		);
 	}
 }
