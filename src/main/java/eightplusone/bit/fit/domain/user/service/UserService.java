@@ -4,9 +4,13 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import eightplusone.bit.fit.domain.auth.service.OAuth2UnlinkService;
 import eightplusone.bit.fit.domain.auth.service.RedisTokenService;
+import eightplusone.bit.fit.domain.image.dto.S3ImageDto;
+import eightplusone.bit.fit.domain.image.entity.Image;
+import eightplusone.bit.fit.domain.image.service.ImageService;
 import eightplusone.bit.fit.domain.interest.entity.Interest;
 import eightplusone.bit.fit.domain.interest.entity.MyInterest;
 import eightplusone.bit.fit.domain.interest.repostiroy.InterestRepository;
@@ -28,6 +32,7 @@ public class UserService {
 	private final InterestRepository interestRepository;
 	private final RedisTokenService redisTokenService;
 	private final OAuth2UnlinkService oAuth2UnlinkService;
+	private final ImageService imageService;
 
 	@Transactional
 	public void delete(String email) {
@@ -77,5 +82,18 @@ public class UserService {
 			MyInterest.of(interest2, user),
 			MyInterest.of(interest3, user)
 		));
+	}
+
+	@Transactional
+	public void updateProfileImage(String email, MultipartFile requestImage) {
+		User user = userRepository.findLoginUserByEmail(email);
+		String userImageUrl = user.getImage().getUrl();
+		if (userImageUrl != null) {
+			imageService.deleteFromS3(userImageUrl);
+		}
+		S3ImageDto s3ImageDto = imageService.uploadToS3(requestImage);
+		user.updateProfileImage(
+			Image.of(s3ImageDto.getUrl(), s3ImageDto.getName())
+		);
 	}
 }
