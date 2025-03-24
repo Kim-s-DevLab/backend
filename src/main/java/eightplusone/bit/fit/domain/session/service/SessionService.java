@@ -11,6 +11,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import eightplusone.bit.fit.domain.session.dto.SessionListResponseDto;
 import eightplusone.bit.fit.domain.session.entity.Session;
@@ -49,7 +50,7 @@ public class SessionService {
 
 	// 혼잡도 전송
 	public Map<Integer, Map<String, Object>> getUpdatedSessionData() {
-		List<Session> sessions = sessionRepository.findAll();
+		List<Session> sessions = sessionRepository.findByIsLiveTrue();
 		HashOperations<String, String, String> hashOps = redisTemplate.opsForHash();
 
 		return sessions.stream()
@@ -146,5 +147,26 @@ public class SessionService {
 				session[3] != null
 			);
 		}).toList();
+	}
+
+	public void updateSessionUserAudioChannel(String email, Integer audioChannel) {
+		String value = audioChannel == null ? "null" : audioChannel.toString();
+		redisTemplate.opsForHash().put(SESSION_USER_KEY, email, value);
+	}
+
+	@Transactional
+	public void deleteSessionData(Integer audioChannel) {
+		redisTemplate.opsForHash().entries(SESSION_USER_KEY)
+			.forEach((key, value) -> {
+				if (value.toString().equals(audioChannel.toString())) {
+					redisTemplate.opsForHash().put(SESSION_USER_KEY, key, "null");
+				}
+			});
+		sessionRepository.updateIsLiveByAudioChannel(audioChannel, false);
+	}
+
+	@Transactional
+	public void activateSessionLive(Integer audioChannel) {
+		sessionRepository.updateIsLiveByAudioChannel(audioChannel, true);
 	}
 }
