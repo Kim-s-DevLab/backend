@@ -48,6 +48,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 		try {
 			if (!tokenProvider.validateAccessToken(accessToken)) {
+				if (isOptionalAuthPath(requestUri)) { // 선택적 필터 적용 조건문
+					filterChain.doFilter(request, response);
+					return;
+				}
 				sendErrorResponse(response, HttpStatus.UNAUTHORIZED, "유효하지 않은 토큰 입니다.");
 				return;
 			}
@@ -74,6 +78,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		String requestUri = request.getRequestURI();
 		String upgradeHeader = request.getHeader("Upgrade");
 
+		if (requestUri.startsWith("/api/v1/session")) {
+			return false;
+		}
+
 		return Arrays.stream(ApiEndpoint.values())
 			.filter(endpoint -> endpoint.name().startsWith("PUBLIC_"))
 			.flatMap(endpoint -> Arrays.stream(endpoint.getPaths()))
@@ -81,5 +89,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			.anyMatch(requestUri::matches)
 			|| (upgradeHeader != null && upgradeHeader.equalsIgnoreCase("websocket")
 		);
+	}
+
+	private boolean isOptionalAuthPath(String requestUri) {
+		return requestUri.startsWith("/api/v1/session");
 	}
 }
