@@ -1,5 +1,10 @@
 package eightplusone.bit.fit.domain.session.entity;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
 import eightplusone.bit.fit.domain.mysession.entity.MySession;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -9,10 +14,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -50,6 +51,9 @@ public class Session {
 	@Column(nullable = false)
 	private Long lectureDuration; // 강연 시간 (초 단위)
 
+	@Column(nullable = false)
+	private Boolean isLive;
+
 	@OneToMany(mappedBy = "session", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<MySession> mySessions = new ArrayList<>();
 
@@ -64,6 +68,7 @@ public class Session {
 		this.standardCount = standardCount;
 		this.audioChannel = audioChannel;
 		this.lectureDuration = Duration.between(startTime, endTime).getSeconds(); // 강연 시간 저장
+		this.isLive = false;
 	}
 
 	// 강연 시간이 변경될 경우 업데이트
