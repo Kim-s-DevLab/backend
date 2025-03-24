@@ -41,7 +41,6 @@ public class SessionRepositoryImpl implements SessionRepositoryCustom {
 				.and(mySession.type.eq(MySessionType.REGISTER));
 		}
 
-		// 그리고 그대로 쿼리 체이닝에 사용
 		List<Tuple> results = queryFactory
 			.select(session, tag, speaker, mySession.id)
 			.from(session)
@@ -108,7 +107,6 @@ public class SessionRepositoryImpl implements SessionRepositoryCustom {
 
 		LocalDateTime now = LocalDateTime.now();
 
-		// 그리고 그대로 쿼리 체이닝에 사용
 		List<Tuple> results = queryFactory
 			.select(session, tag, speaker, mySession.id)
 			.from(session)
