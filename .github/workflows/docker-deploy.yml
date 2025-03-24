@@ -76,7 +76,7 @@ jobs:
             add_env_var() {
               local key=$1
               local value=$2
-              local file=".env"
+              local file="./.env"
             
               if grep -q "^$key=" "$file"; then
                 # 기존에 키가 있으면 수정
