@@ -20,15 +20,19 @@ public class SessionListResponseDto {
 	@Schema(description = "", example = "")
 	private String summary;
 
+	private Boolean isMySession;
+
 	private SpeakerResponseDto speaker;
 
 	private TagDto tags;
 
-	public static SessionListResponseDto from(Session session, SpeakerResponseDto speaker, TagDto tags) {
+	public static SessionListResponseDto from(Session session, SpeakerResponseDto speaker, TagDto tags,
+		Boolean isMySession) {
 		return SessionListResponseDto.builder()
 			.id(session.getSessionId())
 			.title(session.getTitle())
 			.summary(session.getSummary())
+			.isMySession(isMySession)
 			.speaker(speaker)
 			.tags(tags)
 			.build();

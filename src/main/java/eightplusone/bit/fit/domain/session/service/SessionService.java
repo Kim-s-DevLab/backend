@@ -8,6 +8,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +21,8 @@ import eightplusone.bit.fit.domain.speaker.dto.SpeakerResponseDto;
 import eightplusone.bit.fit.domain.speaker.entity.Speaker;
 import eightplusone.bit.fit.domain.tag.dto.TagDto;
 import eightplusone.bit.fit.domain.tag.entity.Tag;
+import eightplusone.bit.fit.domain.user.entity.User;
+import eightplusone.bit.fit.domain.user.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 
@@ -28,6 +32,7 @@ public class SessionService {
 
 	private final RedisTemplate<String, Object> redisTemplate;
 	private final SessionRepository sessionRepository;
+	private final UserRepository userRepository;
 	private final String SESSION_CONGESTION_KEY = "session_congestion";
 	private final String SESSION_USER_KEY = "session_user";
 
@@ -102,26 +107,44 @@ public class SessionService {
 		}
 	}
 
+	private Long getAuthenticatedUserId() {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+		if (authentication == null || !authentication.isAuthenticated()
+			|| "anonymousUser".equals(authentication.getPrincipal())) {
+			return null;
+		}
+
+		String email = authentication.getName();
+		User user = userRepository.findLoginUserByEmail(email);
+		return user != null ? user.getId() : null;
+	}
+
 	public Page<SessionListResponseDto> getSessionsList(Pageable pageable, TagDto tagDto) {
-		Page<Object[]> sessions = sessionRepository.tagFilterAndSearch(pageable, tagDto);
+		Long userId = getAuthenticatedUserId();
+		Page<Object[]> sessions = sessionRepository.tagFilterAndSearch(pageable, tagDto, userId);
 
 		return sessions.map(session -> {
 			return SessionListResponseDto.from(
 				(Session)session[0],
 				SpeakerResponseDto.from((Speaker)session[2]),
-				TagDto.from((Tag)session[1])
+				TagDto.from((Tag)session[1]),
+				session[3] != null
 			);
 		});
 	}
 
 	public List<SessionListResponseDto> getLiveSessions() {
-		List<Object[]> sessions = sessionRepository.findLiveSessionsWithSpeakerAndTag();
+		Long userId = getAuthenticatedUserId();
+
+		List<Object[]> sessions = sessionRepository.findLiveSessionsWithSpeakerAndTag(userId);
 
 		return sessions.stream().map(session -> {
 			return SessionListResponseDto.from(
 				(Session)session[0],
 				SpeakerResponseDto.from((Speaker)session[1]),
-				TagDto.from((Tag)session[2])
+				TagDto.from((Tag)session[2]),
+				session[3] != null
 			);
 		}).toList();
 	}

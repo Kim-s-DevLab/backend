@@ -21,5 +21,7 @@ public interface MySessionRepository extends JpaRepository<MySession, Long> {
 		""")
 	int deleteByUserIdAndSessionIdAndType(Long userId, Long sessionId, MySessionType type);
 
+	Boolean existsByUser_IdAndSession_SessionId(Long userId, Long sessionId);
+
 	Boolean existsByUserIdAndType(Long userId, MySessionType type);
 }

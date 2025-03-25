@@ -1,5 +1,6 @@
 package eightplusone.bit.fit.domain.session.repository;
 
+import static eightplusone.bit.fit.domain.mysession.entity.QMySession.*;
 import static eightplusone.bit.fit.domain.session.entity.QSession.*;
 import static eightplusone.bit.fit.domain.speaker.entity.QSpeaker.*;
 import static eightplusone.bit.fit.domain.tag.entity.QTag.*;
@@ -15,10 +16,13 @@ import org.springframework.util.StringUtils;
 
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
+import eightplusone.bit.fit.domain.mysession.enums.MySessionType;
 import eightplusone.bit.fit.domain.tag.dto.TagDto;
+import io.micrometer.common.lang.Nullable;
 import lombok.RequiredArgsConstructor;
 
 @Repository
@@ -28,13 +32,21 @@ public class SessionRepositoryImpl implements SessionRepositoryCustom {
 	private final JPAQueryFactory queryFactory;
 
 	@Override
-	public Page<Object[]> tagFilterAndSearch(Pageable pageable, TagDto dto) {
+	public Page<Object[]> tagFilterAndSearch(Pageable pageable, TagDto dto, @Nullable Long userId) {
+		BooleanExpression joinCondition = Expressions.FALSE;
+
+		if (userId != null) {
+			joinCondition = mySession.session.eq(session)
+				.and(mySession.user.id.eq(userId))
+				.and(mySession.type.eq(MySessionType.REGISTER));
+		}
+
 		List<Tuple> results = queryFactory
-			.select(session, tag, speaker)
+			.select(session, tag, speaker, mySession.id)
 			.from(session)
 			.leftJoin(tag).on(tag.session.eq(session))
-			// .leftJoin(tag).on(session.sessionId.eq(tag.session.sessionId))
 			.leftJoin(speaker).on(speaker.session.eq(session))
+			.leftJoin(mySession).on(joinCondition)
 			.where(
 				containField(dto.getField()),
 				containTopic(dto.getTopic()),
@@ -79,20 +91,34 @@ public class SessionRepositoryImpl implements SessionRepositoryCustom {
 		return StringUtils.hasText(level) ? tag.level.eq(level) : null;
 	}
 
+	public static BooleanExpression containUser(String email) {
+		return StringUtils.hasText(email) ? mySession.user.email.eq(email) : null;
+	}
+
 	@Override
-	public List<Object[]> findLiveSessionsWithSpeakerAndTag() {
+	public List<Object[]> findLiveSessionsWithSpeakerAndTag(@Nullable Long userId) {
+		BooleanExpression joinCondition = Expressions.FALSE;
+
+		if (userId != null) {
+			joinCondition = mySession.session.eq(session)
+				.and(mySession.user.id.eq(userId))
+				.and(mySession.type.eq(MySessionType.REGISTER));
+		}
+
 		LocalDateTime now = LocalDateTime.now();
 
-		List<Tuple> result = queryFactory
-			.select(session, speaker, tag)
+		List<Tuple> results = queryFactory
+			.select(session, tag, speaker, mySession.id)
 			.from(session)
-			.leftJoin(speaker).on(speaker.session.eq(session))
 			.leftJoin(tag).on(tag.session.eq(session))
+			.leftJoin(speaker).on(speaker.session.eq(session))
+			.leftJoin(mySession).on(joinCondition)
 			.where(session.startTime.loe(now), session.endTime.goe(now))
 			.fetch();
 
-		return result.stream()
-			.map(tuple -> new Object[] {tuple.get(session), tuple.get(speaker), tuple.get(tag)})
+		return results.stream()
+			.map(
+				tuple -> new Object[] {tuple.get(session), tuple.get(speaker), tuple.get(tag), tuple.get(mySession.id)})
 			.toList();
 	}
 }
