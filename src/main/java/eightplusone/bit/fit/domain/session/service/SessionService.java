@@ -13,6 +13,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import eightplusone.bit.fit.domain.session.dto.SessionDetailResponseDto;
 import eightplusone.bit.fit.domain.session.dto.SessionListResponseDto;
 import eightplusone.bit.fit.domain.session.entity.Session;
 import eightplusone.bit.fit.domain.session.entity.enums.CongestionLevel;
@@ -28,6 +29,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class SessionService {
 
 	private final RedisTemplate<String, Object> redisTemplate;
@@ -166,5 +168,10 @@ public class SessionService {
 	@Transactional
 	public void activateSessionLive(Integer audioChannel) {
 		sessionRepository.updateIsLiveByAudioChannel(audioChannel, true);
+	}
+
+	public SessionDetailResponseDto getSessionDetail(Long sessionId) {
+		Session session = sessionRepository.findById(sessionId).orElse(null);
+		return SessionDetailResponseDto.builder().build();
 	}
 }
