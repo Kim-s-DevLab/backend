@@ -23,19 +23,15 @@ public class SessionDetailResponseDto {
 
 	private Boolean isLiked;
 
-	private Integer likes;
-
-	private Boolean isUnliked;
-
-	private Integer unlikes;
+	private Long likesCount;
 
 	public static SessionDetailResponseDto from(Session session, SpeakerResponseDto speaker, TagDto tags,
-		Boolean isLiked, Integer likes) {
+		Boolean isLiked, Long likesCount) {
 		return SessionDetailResponseDto.builder()
 			.title(session.getTitle())
 			.summary(session.getSummary())
 			.isLiked(isLiked)
-			.likes(likes)
+			.likesCount(likesCount)
 			.speaker(speaker)
 			.tags(tags)
 			.build();
