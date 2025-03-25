@@ -36,13 +36,11 @@ public class SessionService {
 	private final String SESSION_CONGESTION_KEY = "session_congestion";
 	private final String SESSION_USER_KEY = "session_user";
 
-	// TODO: User ID 매개변수 부분 -> 토큰으로 수정
 	// 체크인 시 레디스에 저장
 	public void checkIn(String email) {
 		redisTemplate.opsForHash().put(SESSION_USER_KEY, email, "null");
 	}
 
-	// TODO: User ID 매개변수 부분 -> 토큰으로 수정
 	// 체크아웃 시 레디스에서 삭제
 	public void checkOut(String email) {
 		redisTemplate.opsForHash().delete(SESSION_USER_KEY, email);
