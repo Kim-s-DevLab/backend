@@ -20,8 +20,4 @@ public interface MySessionRepository extends JpaRepository<MySession, Long> {
 		delete from MySession ms where ms.user.id = :userId and ms.session.sessionId = :sessionId and ms.type = :type
 		""")
 	int deleteByUserIdAndSessionIdAndType(Long userId, Long sessionId, MySessionType type);
-
-	Boolean existsByUser_IdAndSession_SessionId(Long userId, Long sessionId);
-
-	Boolean existsByUserIdAndType(Long userId, MySessionType type);
 }
