@@ -13,6 +13,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import eightplusone.bit.fit.domain.mysession.repository.MySessionRepository;
+import eightplusone.bit.fit.domain.session.dto.SessionDetailResponseDto;
 import eightplusone.bit.fit.domain.session.dto.SessionListResponseDto;
 import eightplusone.bit.fit.domain.session.entity.Session;
 import eightplusone.bit.fit.domain.session.entity.enums.CongestionLevel;
@@ -23,26 +25,28 @@ import eightplusone.bit.fit.domain.tag.dto.TagDto;
 import eightplusone.bit.fit.domain.tag.entity.Tag;
 import eightplusone.bit.fit.domain.user.entity.User;
 import eightplusone.bit.fit.domain.user.repository.UserRepository;
+import eightplusone.bit.fit.global.exception.CustomException;
+import eightplusone.bit.fit.global.exception.ErrorCode;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class SessionService {
 
 	private final RedisTemplate<String, Object> redisTemplate;
 	private final SessionRepository sessionRepository;
 	private final UserRepository userRepository;
+	private final MySessionRepository mySessionRepository;
 	private final String SESSION_CONGESTION_KEY = "session_congestion";
 	private final String SESSION_USER_KEY = "session_user";
 
-	// TODO: User ID 매개변수 부분 -> 토큰으로 수정
 	// 체크인 시 레디스에 저장
 	public void checkIn(String email) {
 		redisTemplate.opsForHash().put(SESSION_USER_KEY, email, "null");
 	}
 
-	// TODO: User ID 매개변수 부분 -> 토큰으로 수정
 	// 체크아웃 시 레디스에서 삭제
 	public void checkOut(String email) {
 		redisTemplate.opsForHash().delete(SESSION_USER_KEY, email);
@@ -168,5 +172,20 @@ public class SessionService {
 	@Transactional
 	public void activateSessionLive(Integer audioChannel) {
 		sessionRepository.updateIsLiveByAudioChannel(audioChannel, true);
+	}
+
+	public SessionDetailResponseDto getSessionDetail(Long sessionId) {
+		Long userId = getAuthenticatedUserId();
+		Session session = sessionRepository.findById(sessionId)
+			.orElseThrow(() -> new CustomException(ErrorCode.SESSION_NOT_FOUND));
+
+		Object[] result = sessionRepository.findSessionDetailWithSpeakerAndTag(session.getSessionId(), userId);
+		return SessionDetailResponseDto.from(
+			(Session)result[0],
+			SpeakerResponseDto.from((Speaker)result[1]),
+			TagDto.from((Tag)result[2]),
+			result[3] != null,
+			(Long)result[4]
+		);
 	}
 }
