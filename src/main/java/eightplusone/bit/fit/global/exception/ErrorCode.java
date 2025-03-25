@@ -1,8 +1,9 @@
 package eightplusone.bit.fit.global.exception;
 
+import org.springframework.http.HttpStatus;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import org.springframework.http.HttpStatus;
 
 @Getter
 @AllArgsConstructor
@@ -32,6 +33,7 @@ public enum ErrorCode {
 	USER_NOT_FOUND(HttpStatus.NOT_FOUND, "해당하는 정보의 사용자를 찾을 수 없습니다."),
 	RESOURCE_NOT_FOUND(HttpStatus.NOT_FOUND, "요청한 리소스를 찾을 수 없습니다."),
 	CHAT_SESSION_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 세션의 채팅을 찾을 수 없습니다."),
+	SESSION_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 세션을 찾을 수 없습니다."),
 
 	/**
 	 * 409 : CONFLICT : Resource 의 현재 상태와 충돌
