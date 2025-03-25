@@ -13,6 +13,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import eightplusone.bit.fit.domain.mysession.repository.MySessionRepository;
 import eightplusone.bit.fit.domain.session.dto.SessionDetailResponseDto;
 import eightplusone.bit.fit.domain.session.dto.SessionListResponseDto;
 import eightplusone.bit.fit.domain.session.entity.Session;
@@ -24,6 +25,8 @@ import eightplusone.bit.fit.domain.tag.dto.TagDto;
 import eightplusone.bit.fit.domain.tag.entity.Tag;
 import eightplusone.bit.fit.domain.user.entity.User;
 import eightplusone.bit.fit.domain.user.repository.UserRepository;
+import eightplusone.bit.fit.global.exception.CustomException;
+import eightplusone.bit.fit.global.exception.ErrorCode;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 
@@ -35,6 +38,7 @@ public class SessionService {
 	private final RedisTemplate<String, Object> redisTemplate;
 	private final SessionRepository sessionRepository;
 	private final UserRepository userRepository;
+	private final MySessionRepository mySessionRepository;
 	private final String SESSION_CONGESTION_KEY = "session_congestion";
 	private final String SESSION_USER_KEY = "session_user";
 
@@ -171,7 +175,17 @@ public class SessionService {
 	}
 
 	public SessionDetailResponseDto getSessionDetail(Long sessionId) {
-		Session session = sessionRepository.findById(sessionId).orElse(null);
-		return SessionDetailResponseDto.builder().build();
+		Long userId = getAuthenticatedUserId();
+		Session session = sessionRepository.findById(sessionId)
+			.orElseThrow(() -> new CustomException(ErrorCode.SESSION_NOT_FOUND));
+
+		Object[] result = sessionRepository.findSessionDetailWithSpeakerAndTag(session.getSessionId(), userId);
+		return SessionDetailResponseDto.from(
+			(Session)result[0],
+			SpeakerResponseDto.from((Speaker)result[1]),
+			TagDto.from((Tag)result[2]),
+			result[3] != null,
+			(Long)result[4]
+		);
 	}
 }

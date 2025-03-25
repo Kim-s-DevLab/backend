@@ -10,8 +10,10 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import eightplusone.bit.fit.domain.session.dto.SessionDetailResponseDto;
 import eightplusone.bit.fit.domain.session.dto.SessionListResponseDto;
 import eightplusone.bit.fit.domain.session.service.SessionService;
 import eightplusone.bit.fit.domain.tag.dto.TagDto;
@@ -47,5 +49,17 @@ public class SessionController {
 	public ResponseEntity<ResponseDto<List<SessionListResponseDto>>> onLiveSessions() {
 		return ResponseEntity.status(OK)
 			.body(ResponseDto.success(OK, "라이브 중인 세션 리스트 조회 성공", sessionService.getLiveSessions()));
+	}
+
+	@Operation(summary = "세션 상세 조회", description = "**성공 응답 데이터:** 세션 상세조회")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "세션 상세 조회 성공"),
+		@ApiResponse(responseCode = "404", description = "해당 세션을 찾을 수 없습니다."),
+	})
+	@GetMapping("/{sessionId}")
+	public ResponseEntity<ResponseDto<SessionDetailResponseDto>> sessionDetail(
+		@RequestParam("sessionId") Long sessionId) {
+		return ResponseEntity.status(OK)
+			.body(ResponseDto.success(OK, "세션 상세 조회 성공", sessionService.getSessionDetail(sessionId)));
 	}
 }
