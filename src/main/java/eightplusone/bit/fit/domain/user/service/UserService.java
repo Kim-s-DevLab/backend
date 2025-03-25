@@ -108,4 +108,9 @@ public class UserService {
 		imageService.deleteFromS3(userImageUrl);
 		user.deleteProfileImage();
 	}
+
+	public String findProfileImage(String email) {
+		User user = userRepository.findLoginUserByEmail(email);
+		return user.getImageUrl();
+	}
 }
