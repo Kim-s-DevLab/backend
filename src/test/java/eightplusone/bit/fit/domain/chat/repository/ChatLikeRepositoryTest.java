@@ -69,7 +69,7 @@ public class ChatLikeRepositoryTest {
 		when(setOperations.size(likeKey)).thenReturn(0L);
 
 		chatLikeRepository.likeMessage(likeKey, userId);
-		chatLikeRepository.unlikeMessage(likeKey, userId);
+		chatLikeRepository.unlikeMessage(likeKey, userId, sessionId, messageId);
 
 		int likeCount = chatLikeRepository.getLikeCount(likeKey);
 		assertThat(likeCount).isEqualTo(0);

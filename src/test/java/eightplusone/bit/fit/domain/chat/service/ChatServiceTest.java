@@ -14,6 +14,7 @@ import eightplusone.bit.fit.domain.user.repository.UserRedisRepository;
 import eightplusone.bit.fit.global.exception.CustomException;
 import eightplusone.bit.fit.global.exception.ErrorCode;
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,9 +22,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.RedisTemplate;
 
 @ExtendWith(MockitoExtension.class)
@@ -147,11 +145,11 @@ class ChatServiceTest {
 		String likeKey = "like:" + sessionId + ":" + messageId;
 
 		when(chatLikeRepository.hasLiked(likeKey, userId)).thenReturn(true);
-		doNothing().when(chatLikeRepository).unlikeMessage(likeKey, userId);
+		doNothing().when(chatLikeRepository).unlikeMessage(likeKey, userId, sessionId, messageId);
 
 		chatService.unlikeMessage(userId, sessionId, messageId);
 
-		verify(chatLikeRepository, times(1)).unlikeMessage(likeKey, userId);
+		verify(chatLikeRepository, times(1)).unlikeMessage(likeKey, userId, sessionId, messageId);
 	}
 
 	// 좋아요를 누르지 않은 상태에서 취소하려고 하면 예외가 발생하는지 확인
@@ -230,37 +228,77 @@ class ChatServiceTest {
 		assertThat(top3.get(2).getMessageId()).isEqualTo("msg1"); // 3
 	}
 
+	// @Test
+	// void getAllQuestionMessages_success() {
+	// 	// given
+	// 	Long sessionId = 1L;
+	//
+	// 	ChatMessageDto dto1 = new ChatMessageDto("msg1", ChatCategory.QUESTION, "Q1", "User1", "user1", sessionId, "t1",
+	// 		0);
+	// 	ChatMessageDto dto2 = new ChatMessageDto("msg2", ChatCategory.QUESTION, "Q2", "User2", "user2", sessionId, "t2",
+	// 		0);
+	// 	ChatMessageDto dto3 = new ChatMessageDto("msg3", ChatCategory.QUESTION, "Q3", "User3", "user3", sessionId, "t3",
+	// 		0);
+	//
+	// 	when(chatRepository.existsBySessionId(String.valueOf(sessionId))).thenReturn(true);
+	// 	when(chatRepository.getRecentMessages(String.valueOf(sessionId))).thenReturn(List.of(dto1, dto2, dto3));
+	//
+	// 	when(userRedisRepository.getUserName("user1")).thenReturn("User1");
+	// 	when(userRedisRepository.getUserName("user3")).thenReturn("User3");
+	//
+	// 	when(chatLikeRepository.getLikeCount("like:1:msg1")).thenReturn(5);
+	// 	when(chatLikeRepository.getLikeCount("like:1:msg2")).thenReturn(2);
+	// 	when(chatLikeRepository.getLikeCount("like:1:msg3")).thenReturn(10);
+	//
+	// 	Pageable pageable = PageRequest.of(0, 2);
+	//
+	// 	// when
+	// 	Page<ChatMessageDto> page = chatService.getAllQuestionMessages(sessionId, pageable);
+	//
+	// 	// then
+	// 	assertThat(page.getContent()).hasSize(2);
+	// 	assertThat(page.getContent().get(0).getMessageId()).isEqualTo("msg3"); // 좋아요 10
+	// 	assertThat(page.getContent().get(1).getMessageId()).isEqualTo("msg1"); // 좋아요 5
+	// 	assertThat(page.getTotalElements()).isEqualTo(3); // 전체는 3개
+	// }
+
 	@Test
-	void getAllQuestionMessages_success() {
+	void getZSetSortedQuestions_success() {
 		// given
-		Long sessionId = 1L;
+		String zsetKey = "questions:session:" + sessionId;
 
-		ChatMessageDto dto1 = new ChatMessageDto("msg1", ChatCategory.QUESTION, "Q1", "User1", "user1", sessionId, "t1",
-			0);
-		ChatMessageDto dto2 = new ChatMessageDto("msg2", ChatCategory.QUESTION, "Q2", "User2", "user2", sessionId, "t2",
-			0);
-		ChatMessageDto dto3 = new ChatMessageDto("msg3", ChatCategory.QUESTION, "Q3", "User3", "user3", sessionId, "t3",
-			0);
+		// ZSet에서 정렬된 메시지 ID 3개 반환한다고 가정
+		when(redisTemplate.opsForZSet().reverseRange(zsetKey, 0, 2))
+			.thenReturn(Set.of("msg3", "msg1", "msg2"));
 
-		when(chatRepository.existsBySessionId(String.valueOf(sessionId))).thenReturn(true);
-		when(chatRepository.getRecentMessages(String.valueOf(sessionId))).thenReturn(List.of(dto1, dto2, dto3));
+		// 메시지 본문
+		when(redisTemplate.opsForValue().get("chat:message:msg3"))
+			.thenReturn(
+				"{\"messageId\":\"msg3\",\"sessionId\":1,\"userId\":\"user3\",\"category\":\"QUESTION\",\"message\":\"Q3\",\"timestamp\":\"t3\"}");
+		when(redisTemplate.opsForValue().get("chat:message:msg1"))
+			.thenReturn(
+				"{\"messageId\":\"msg1\",\"sessionId\":1,\"userId\":\"user1\",\"category\":\"QUESTION\",\"message\":\"Q1\",\"timestamp\":\"t1\"}");
+		when(redisTemplate.opsForValue().get("chat:message:msg2"))
+			.thenReturn(
+				"{\"messageId\":\"msg2\",\"sessionId\":1,\"userId\":\"user2\",\"category\":\"QUESTION\",\"message\":\"Q2\",\"timestamp\":\"t2\"}");
+
+		// 좋아요 수
+		when(redisTemplate.opsForZSet().score(zsetKey, "msg3")).thenReturn(10.0);
+		when(redisTemplate.opsForZSet().score(zsetKey, "msg1")).thenReturn(5.0);
+		when(redisTemplate.opsForZSet().score(zsetKey, "msg2")).thenReturn(2.0);
 
 		when(userRedisRepository.getUserName("user1")).thenReturn("User1");
+		when(userRedisRepository.getUserName("user2")).thenReturn("User2");
 		when(userRedisRepository.getUserName("user3")).thenReturn("User3");
 
-		when(chatLikeRepository.getLikeCount("like:1:msg1")).thenReturn(5);
-		when(chatLikeRepository.getLikeCount("like:1:msg2")).thenReturn(2);
-		when(chatLikeRepository.getLikeCount("like:1:msg3")).thenReturn(10);
-
-		Pageable pageable = PageRequest.of(0, 2);
-
 		// when
-		Page<ChatMessageDto> page = chatService.getAllQuestionMessages(sessionId, pageable);
+		List<ChatMessageDto> result = chatService.getZSetSortedQuestions(sessionId, 0, 3);
 
 		// then
-		assertThat(page.getContent()).hasSize(2);
-		assertThat(page.getContent().get(0).getMessageId()).isEqualTo("msg3"); // 좋아요 10
-		assertThat(page.getContent().get(1).getMessageId()).isEqualTo("msg1"); // 좋아요 5
-		assertThat(page.getTotalElements()).isEqualTo(3); // 전체는 3개
+		assertThat(result).hasSize(3);
+		assertThat(result.get(0).getMessageId()).isEqualTo("msg3");
+		assertThat(result.get(1).getMessageId()).isEqualTo("msg1");
+		assertThat(result.get(2).getMessageId()).isEqualTo("msg2");
 	}
+
 }
