@@ -61,6 +61,12 @@ public class ChatService {
 
 		chatRepository.saveMessage(message);
 
+		// 메시지 카테고리가 QUESTION인 경우 ZSet에 등록
+		if (message.getCategory() == ChatCategory.QUESTION) {
+			String zsetKey = "questions:session:" + sessionId;
+			redisTemplate.opsForZSet().add(zsetKey, message.getMessageId(), 0); // 초기 좋아요 수 0
+		}
+
 		String jsonMessage = objectMapper.writeValueAsString(message);
 		String redisKey = "chat-" + sessionId;
 
