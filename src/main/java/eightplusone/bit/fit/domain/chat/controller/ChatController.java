@@ -9,8 +9,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.Header;
@@ -104,12 +102,15 @@ public class ChatController {
 		return ResponseEntity.ok(hasLiked);
 	}
 
-	@Operation(summary = "전체 질문 목록 조회", description = "특정 세션의 모든 질문 메시지를 좋아요 순으로 페이징 처리하여 반환합니다.")
-	@GetMapping("/questions/{sessionId}/all")
-	public Page<ChatMessageDto> getAllQuestions(
-		@Parameter(description = "세션 ID") @PathVariable String sessionId,
-		Pageable pageable
+	@Operation(summary = "ZSet 기반 좋아요 정렬 질문 페이징", description = "ZSet으로 좋아요 순으로 정렬된 질문을 페이징하여 반환합니다.")
+	@GetMapping("/questions/zset/{sessionId}")
+	public ResponseEntity<List<ChatMessageDto>> getZSetSortedQuestions(
+		@PathVariable Long sessionId,
+		@RequestParam(defaultValue = "0") int page,
+		@RequestParam(defaultValue = "3") int size
 	) {
-		return chatService.getAllQuestionMessages(Long.valueOf(sessionId), pageable);
+		List<ChatMessageDto> result = chatService.getZSetSortedQuestions(sessionId, page, size);
+		return ResponseEntity.ok(result);
 	}
+
 }
