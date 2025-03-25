@@ -4,9 +4,12 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import eightplusone.bit.fit.domain.auth.service.OAuth2UnlinkService;
 import eightplusone.bit.fit.domain.auth.service.RedisTokenService;
+import eightplusone.bit.fit.domain.image.dto.S3ImageDto;
+import eightplusone.bit.fit.domain.image.service.ImageService;
 import eightplusone.bit.fit.domain.interest.entity.Interest;
 import eightplusone.bit.fit.domain.interest.entity.MyInterest;
 import eightplusone.bit.fit.domain.interest.repostiroy.InterestRepository;
@@ -16,6 +19,8 @@ import eightplusone.bit.fit.domain.user.dto.UserProfileResponseDto;
 import eightplusone.bit.fit.domain.user.dto.UserProfileUpdateRequestDto;
 import eightplusone.bit.fit.domain.user.entity.User;
 import eightplusone.bit.fit.domain.user.repository.UserRepository;
+import eightplusone.bit.fit.global.exception.CustomException;
+import eightplusone.bit.fit.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -28,6 +33,7 @@ public class UserService {
 	private final InterestRepository interestRepository;
 	private final RedisTokenService redisTokenService;
 	private final OAuth2UnlinkService oAuth2UnlinkService;
+	private final ImageService imageService;
 
 	@Transactional
 	public void delete(String email) {
@@ -77,5 +83,34 @@ public class UserService {
 			MyInterest.of(interest2, user),
 			MyInterest.of(interest3, user)
 		));
+	}
+
+	@Transactional
+	public void updateProfileImage(String email, MultipartFile requestImage) {
+		User user = userRepository.findLoginUserByEmail(email);
+		String userImageUrl = user.getImageUrl();
+		if (userImageUrl != null) {
+			imageService.deleteFromS3(userImageUrl);
+		}
+		S3ImageDto s3ImageDto = imageService.uploadToS3(requestImage);
+		user.updateProfileImage(
+			s3ImageDto.getName(), s3ImageDto.getUrl()
+		);
+	}
+
+	@Transactional
+	public void deleteProfileImage(String email) {
+		User user = userRepository.findLoginUserByEmail(email);
+		String userImageUrl = user.getImageUrl();
+		if (userImageUrl == null) {
+			throw new CustomException(ErrorCode.RESOURCE_NOT_FOUND);
+		}
+		imageService.deleteFromS3(userImageUrl);
+		user.deleteProfileImage();
+	}
+
+	public String findProfileImage(String email) {
+		User user = userRepository.findLoginUserByEmail(email);
+		return user.getImageUrl();
 	}
 }

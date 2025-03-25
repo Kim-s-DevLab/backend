@@ -47,8 +47,11 @@ public class User extends BaseTimeEntity {
 	@Column(name = "years")
 	private Integer years;
 
-	@Column(name = "image", length = 200)
-	private String image;
+	@Column(name = "image_name")
+	private String imageName;
+
+	@Column(name = "image_url")
+	private String imageUrl;
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "role", length = 20, nullable = false)
@@ -82,5 +85,15 @@ public class User extends BaseTimeEntity {
 	public void updateProfileInfo(String job, Integer years) {
 		this.job = job;
 		this.years = years;
+	}
+
+	public void updateProfileImage(String imageName, String imageUrl) {
+		this.imageName = imageName;
+		this.imageUrl = imageUrl;
+	}
+
+	public void deleteProfileImage() {
+		this.imageName = null;
+		this.imageUrl = null;
 	}
 }
