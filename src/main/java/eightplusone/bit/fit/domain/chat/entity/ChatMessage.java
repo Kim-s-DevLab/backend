@@ -33,7 +33,8 @@ public class ChatMessage {
 
 	// 기존 메시지를 새로 저장할 때 사용하는 생성자
 	@Builder
-	public ChatMessage(Long sessionId, String userId, ChatCategory category, String message) {
+	public ChatMessage(String messageId, Long sessionId, String userId, ChatCategory category, String message,
+		LocalDateTime timestamp) {
 		this.messageId = UUID.randomUUID().toString();
 		this.sessionId = sessionId;
 		this.userId = userId;

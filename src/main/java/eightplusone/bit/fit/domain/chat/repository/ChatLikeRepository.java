@@ -19,8 +19,12 @@ public class ChatLikeRepository {
 	}
 
 	// 좋아요 취소
-	public void unlikeMessage(String likeKey, String userId) {
+	public void unlikeMessage(String likeKey, String userId, Long sessionId, String messageId) {
 		redisTemplate.opsForSet().remove(likeKey, userId);
+
+		// ZSet에서 좋아요 score -1
+		String zsetKey = "questions:session:" + sessionId;
+		redisTemplate.opsForZSet().incrementScore(zsetKey, messageId, -1);
 	}
 
 	// 좋아요 개수 조회

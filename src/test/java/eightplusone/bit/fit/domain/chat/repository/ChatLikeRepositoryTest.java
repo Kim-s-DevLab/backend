@@ -11,6 +11,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.SetOperations;
+import org.springframework.data.redis.core.ZSetOperations;
 
 @ExtendWith(MockitoExtension.class)
 public class ChatLikeRepositoryTest {
@@ -20,6 +21,9 @@ public class ChatLikeRepositoryTest {
 
 	@Mock
 	private SetOperations<String, Object> setOperations;
+
+	@Mock
+	private ZSetOperations<String, Object> zSetOperations;
 
 	@InjectMocks
 	private ChatLikeRepository chatLikeRepository;
@@ -62,6 +66,8 @@ public class ChatLikeRepositoryTest {
 
 	@Test
 	void shouldRemoveLikeSuccessfully() {
+		when(redisTemplate.opsForZSet()).thenReturn(zSetOperations);
+
 		String userId = "user1";
 
 		when(setOperations.add(likeKey, userId)).thenReturn(1L);
@@ -69,10 +75,13 @@ public class ChatLikeRepositoryTest {
 		when(setOperations.size(likeKey)).thenReturn(0L);
 
 		chatLikeRepository.likeMessage(likeKey, userId);
-		chatLikeRepository.unlikeMessage(likeKey, userId);
+		chatLikeRepository.unlikeMessage(likeKey, userId, sessionId, messageId);
 
 		int likeCount = chatLikeRepository.getLikeCount(likeKey);
 		assertThat(likeCount).isEqualTo(0);
+
+		// ZSet score 감소 검증
+		verify(zSetOperations).incrementScore("questions:session:" + sessionId, messageId, -1);
 	}
 
 	@Test
