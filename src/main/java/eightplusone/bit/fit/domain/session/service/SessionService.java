@@ -231,8 +231,6 @@ public class SessionService {
 					score += 3;
 
 				score += CareerLevel.calculateScore(level, tag.getLevel());
-				System.out.printf("세션ID: %d | 제목: %s | 필드: %s | 토픽: %s | 레벨: %s | 점수: %d\n",
-					session.getSessionId(), session.getTitle(), tag.getField(), tag.getTopic(), tag.getLevel(), score);
 
 				return new ScoredSession(score, session, tag, speaker);
 			})
