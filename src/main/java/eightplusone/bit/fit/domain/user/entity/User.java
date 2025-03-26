@@ -84,7 +84,8 @@ public class User extends BaseTimeEntity {
 			.build();
 	}
 
-	public void updateProfileInfo(String job, YearLevel years) {
+	public void updateProfileInfo(String name, String job, YearLevel years) {
+		this.name = name;
 		this.job = job;
 		this.years = years;
 	}

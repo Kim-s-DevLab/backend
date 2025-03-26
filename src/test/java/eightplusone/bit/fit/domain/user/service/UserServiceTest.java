@@ -129,7 +129,7 @@ class UserServiceTest {
 		Interest interest2 = InterestFixture.INTEREST_FIXTURE_2.createInterest();
 		Interest interest3 = InterestFixture.INTEREST_FIXTURE_3.createInterest();
 
-		UserProfileUpdateRequestDto userProfileUpdateRequestDto = UserProfileUpdateRequestDto.of("디자이너",
+		UserProfileUpdateRequestDto userProfileUpdateRequestDto = UserProfileUpdateRequestDto.of("홍길동", "디자이너",
 			YearLevel.SENIOR,
 			List.of(interest1.getName(), interest2.getName(), interest3.getName()));
 
@@ -149,6 +149,7 @@ class UserServiceTest {
 
 		//then
 		assertAll(
+			() -> assertThat(user.getName()).isEqualTo("홍길동"),
 			() -> assertThat(user.getJob()).isEqualTo("디자이너"),
 			() -> assertThat(user.getYears()).isEqualTo(YearLevel.SENIOR),
 			() -> assertThat(myInterests.get(0).getInterest().getName()).isEqualTo(interest1.getName()),
@@ -166,7 +167,7 @@ class UserServiceTest {
 		Interest interest2 = InterestFixture.INTEREST_FIXTURE_2.createInterest();
 		Interest interest3 = InterestFixture.INTEREST_FIXTURE_3.createInterest();
 
-		UserProfileUpdateRequestDto userProfileUpdateRequestDto = UserProfileUpdateRequestDto.of("디자이너",
+		UserProfileUpdateRequestDto userProfileUpdateRequestDto = UserProfileUpdateRequestDto.of("홍길동", "디자이너",
 			YearLevel.SENIOR,
 			List.of(interest1.getName(), interest2.getName(), interest3.getName()));
 
@@ -188,6 +189,7 @@ class UserServiceTest {
 
 		//then
 		assertAll(
+			() -> assertThat(user.getName()).isEqualTo("홍길동"),
 			() -> assertThat(user.getJob()).isEqualTo("디자이너"),
 			() -> assertThat(user.getYears()).isEqualTo(YearLevel.SENIOR),
 			() -> assertThat(myInterests.get(0).getInterest().getName()).isEqualTo(interest1.getName()),
