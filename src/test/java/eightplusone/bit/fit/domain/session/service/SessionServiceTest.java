@@ -9,6 +9,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -85,6 +88,31 @@ class SessionServiceTest {
 	}
 
 	@Test
+	@DisplayName("1000명 체크인을 동시에 수행한다.")
+	void checkIn_concurrently() throws InterruptedException {
+		// Given
+		int numberOfUsers = 1000;
+		ExecutorService executorService = Executors.newFixedThreadPool(100);
+		CountDownLatch latch = new CountDownLatch(numberOfUsers);
+
+		for (int i = 0; i < numberOfUsers; i++) {
+			int finalI = i;
+			executorService.execute(() -> {
+				try {
+					String email = "user" + finalI + "@test.com";
+					sessionService.checkIn(email);
+				} finally {
+					latch.countDown();
+				}
+			});
+		}
+		latch.await();
+
+		// Then: 검증
+		verify(hashOperations, times(numberOfUsers)).put(eq("session_user"), anyString(), eq("null"));
+	}
+
+	@Test
 	@DisplayName("체크아웃을 한다.")
 	void checkOut() {
 		// Given
@@ -95,6 +123,31 @@ class SessionServiceTest {
 
 		// Then
 		verify(hashOperations).delete("session_user", email);
+	}
+
+	@Test
+	@DisplayName("1000명 체크아웃을 동시에 수행한다.")
+	void checkOut_concurrently() throws InterruptedException {
+		// Given
+		int numberOfUsers = 1000;
+		ExecutorService executorService = Executors.newFixedThreadPool(100);
+		CountDownLatch latch = new CountDownLatch(numberOfUsers);
+
+		for (int i = 0; i < numberOfUsers; i++) {
+			int finalI = i;
+			executorService.execute(() -> {
+				try {
+					String email = "user" + finalI + "@test.com";
+					sessionService.checkOut(email);
+				} finally {
+					latch.countDown();
+				}
+			});
+		}
+		latch.await();
+
+		// Then
+		verify(hashOperations, times(numberOfUsers)).delete(eq("session_user"), anyString());
 	}
 
 	@Test
