@@ -9,8 +9,10 @@ import lombok.Getter;
 @Builder
 @Schema(name = "SpeakerResponseDto: 연사 정보 응답 dto")
 public class SpeakerResponseDto {
+	@Schema(description = "이미지", example = "http://image.com")
 	private String image;
 
+	@Schema(description = "이름", example = "홍길동")
 	private String name;
 
 	public static SpeakerResponseDto from(Speaker speaker) {
