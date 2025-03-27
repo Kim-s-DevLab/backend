@@ -11,19 +11,22 @@ import lombok.Getter;
 @Builder
 @Schema(name = "SessionListResponseDto: 전체 세션 조회 Dto")
 public class SessionListResponseDto {
-	@Schema(description = "", example = "")
+	@Schema(description = "세션 아이디", example = "1")
 	private Long id;
 
-	@Schema(description = "", example = "")
+	@Schema(description = "세션 제목", example = "디지털 송금 혁명의 미래")
 	private String title;
 
-	@Schema(description = "", example = "")
+	@Schema(description = "세션 요약", example = "차세대 디지털 송금 시스템과 국제 간 송금 혁신 방안 논의")
 	private String summary;
 
+	@Schema(description = "세션 담기 여부", example = "true")
 	private Boolean isMySession;
 
+	@Schema(description = "연사 정보")
 	private SpeakerResponseDto speaker;
 
+	@Schema(description = "태그 정보")
 	private TagDto tags;
 
 	public static SessionListResponseDto from(Session session, SpeakerResponseDto speaker, TagDto tags,
