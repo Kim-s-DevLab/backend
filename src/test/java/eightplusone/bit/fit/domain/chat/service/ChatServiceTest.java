@@ -80,7 +80,7 @@ class ChatServiceTest {
 		when(chatRepository.existsBySessionId(String.valueOf(sessionId))).thenReturn(true);
 		doNothing().when(chatRepository).saveMessage(any(ChatMessage.class));
 
-		chatService.sendMessage(chatMessageDto, userId, sessionId);
+		chatService.sendMessageWithEmail(chatMessageDto, userId, sessionId);
 
 		verify(chatRepository, times(1)).saveMessage(any(ChatMessage.class));
 		verify(redisTemplate, times(1)).convertAndSend(eq("chat-" + sessionId), any(ChatMessageDto.class));
@@ -92,7 +92,7 @@ class ChatServiceTest {
 		when(chatRepository.existsBySessionId(String.valueOf(sessionId))).thenReturn(false);
 
 		CustomException exception = assertThrows(CustomException.class, () ->
-			chatService.sendMessage(chatMessageDto, userId, sessionId));
+			chatService.sendMessageWithEmail(chatMessageDto, userId, sessionId));
 
 		assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.CHAT_SESSION_NOT_FOUND);
 	}

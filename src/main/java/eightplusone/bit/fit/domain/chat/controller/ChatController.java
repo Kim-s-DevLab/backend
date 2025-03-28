@@ -40,7 +40,7 @@ public class ChatController {
 		@Payload ChatMessageDto message,
 		@Parameter(description = "사용자 ID", example = "user123") @Header("simpUser") Principal principal
 	) throws JsonProcessingException {
-		chatService.sendMessage(message, principal.getName(), Long.valueOf(sessionId));
+		chatService.sendMessageWithEmail(message, principal.getName(), Long.valueOf(sessionId));
 	}
 
 	@Operation(summary = "최근 메시지 조회", description = "특정 채팅방의 최근 메시지를 조회합니다.")
