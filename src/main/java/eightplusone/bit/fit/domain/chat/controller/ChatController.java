@@ -97,17 +97,6 @@ public class ChatController {
 		return chatService.getSortedQuestionMessages(Long.valueOf(sessionId));
 	}
 
-	// @Operation(summary = "좋아요 존재 여부 확인", description = "사용자가 특정 세션의 특정 메시지에 좋아요를 눌렀는지 확인합니다.")
-	// @GetMapping("/likes/{userId}/{sessionId}/{messageId}")
-	// public ResponseEntity<Boolean> hasLiked(
-	// 	@PathVariable String userId,
-	// 	@PathVariable Long sessionId,
-	// 	@PathVariable String messageId
-	// ) {
-	// 	boolean hasLiked = chatService.hasLiked(userId, sessionId, messageId);
-	// 	return ResponseEntity.ok(hasLiked);
-	// }
-
 	@GetMapping("/likes/{sessionId}/{messageId}")
 	public ResponseEntity<Boolean> hasLiked(@PathVariable Long sessionId,
 		@PathVariable String messageId,
