@@ -15,6 +15,7 @@ public class SpeakerResponseDto {
 	@Schema(description = "이름", example = "홍길동")
 	private String name;
 
+	@Schema(description = "설명", example = "글로벌 펀드 매니저")
 	private String description;
 
 	public static SpeakerResponseDto from(Speaker speaker) {
