@@ -82,6 +82,33 @@ class ChatServiceTest {
 			.build();
 	}
 
+	@Test
+	void createChatSession_shouldCreateIfNotExists() {
+		// given
+		Long testSessionId = 99L;
+		when(chatRepository.existsBySessionId(String.valueOf(testSessionId))).thenReturn(false);
+		doNothing().when(chatRepository).createChatSession(String.valueOf(testSessionId));
+
+		// when
+		chatService.createChatSession(testSessionId);
+
+		// then
+		verify(chatRepository, times(1)).createChatSession(String.valueOf(testSessionId));
+	}
+
+	@Test
+	void createChatSession_shouldNotCreateIfAlreadyExists() {
+		// given
+		Long testSessionId = 100L;
+		when(chatRepository.existsBySessionId(String.valueOf(testSessionId))).thenReturn(true);
+
+		// when
+		chatService.createChatSession(testSessionId);
+
+		// then
+		verify(chatRepository, never()).createChatSession(any());
+	}
+
 	// 채팅 메시지를 성공적으로 저장하고 레디스에 발행되는지 확인
 	@Test
 	void sendMessage_success() throws JsonProcessingException {
