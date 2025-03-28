@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.security.Principal;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -37,9 +38,9 @@ public class ChatController {
 	public void sendMessage(
 		@Parameter(description = "채팅 세션 ID", example = "1234") @DestinationVariable("sessionId") String sessionId,
 		@Payload ChatMessageDto message,
-		@Parameter(description = "사용자 ID", example = "user123") @Header("User-Id") String userId
+		@Parameter(description = "사용자 ID", example = "user123") @Header("simpUser") Principal principal
 	) throws JsonProcessingException {
-		chatService.sendMessage(message, userId, Long.valueOf(sessionId));
+		chatService.sendMessage(message, principal.getName(), Long.valueOf(sessionId));
 	}
 
 	@Operation(summary = "최근 메시지 조회", description = "특정 채팅방의 최근 메시지를 조회합니다.")
