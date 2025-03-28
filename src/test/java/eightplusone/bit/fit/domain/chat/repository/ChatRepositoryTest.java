@@ -174,4 +174,13 @@ public class ChatRepositoryTest {
 		});
 	}
 
+	@Test
+	void testCreateChatSession() {
+		// given
+		Long newSessionId = 9999L;
+		chatRepository.createChatSession(String.valueOf(newSessionId));
+		// then
+		assertTrue(chatRepository.existsBySessionId(String.valueOf(newSessionId)), "채팅방 생성 후 존재하지 않음!");
+	}
+
 }
