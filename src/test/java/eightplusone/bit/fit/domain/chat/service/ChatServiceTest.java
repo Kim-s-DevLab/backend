@@ -16,6 +16,7 @@ import eightplusone.bit.fit.domain.user.repository.UserRedisRepository;
 import eightplusone.bit.fit.domain.user.repository.UserRepository;
 import eightplusone.bit.fit.global.exception.CustomException;
 import eightplusone.bit.fit.global.exception.ErrorCode;
+import java.time.LocalDateTime;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
@@ -58,7 +59,7 @@ class ChatServiceTest {
 	private final Long sessionId = 1L;
 	private final String userId = "testUser";
 	private final String messageId = "testMessage";
-	private final String timestamp = "testTimestamp";
+	private final LocalDateTime timestamp = LocalDateTime.now();
 	private final int likes = 0;
 
 	@BeforeEach
@@ -79,6 +80,7 @@ class ChatServiceTest {
 			.userId(userId)
 			.category(ChatCategory.GENERAL)
 			.message("Test message")
+			.timestamp(timestamp)
 			.build();
 	}
 
@@ -241,13 +243,17 @@ class ChatServiceTest {
 		Long sessionId = 1L;
 
 		// 메시지 4개 (QUESTION)
-		ChatMessageDto dto1 = new ChatMessageDto("msg1", ChatCategory.QUESTION, "Q1", "User1", "user1", sessionId, "t1",
+		ChatMessageDto dto1 = new ChatMessageDto("msg1", ChatCategory.QUESTION, "Q1", "User1", "user1", sessionId,
+			LocalDateTime.now(),
 			0);
-		ChatMessageDto dto2 = new ChatMessageDto("msg2", ChatCategory.QUESTION, "Q2", "User2", "user2", sessionId, "t2",
+		ChatMessageDto dto2 = new ChatMessageDto("msg2", ChatCategory.QUESTION, "Q2", "User2", "user2", sessionId,
+			LocalDateTime.now(),
 			0);
-		ChatMessageDto dto3 = new ChatMessageDto("msg3", ChatCategory.QUESTION, "Q3", "User3", "user3", sessionId, "t3",
+		ChatMessageDto dto3 = new ChatMessageDto("msg3", ChatCategory.QUESTION, "Q3", "User3", "user3", sessionId,
+			LocalDateTime.now(),
 			0);
-		ChatMessageDto dto4 = new ChatMessageDto("msg4", ChatCategory.QUESTION, "Q4", "User4", "user4", sessionId, "t4",
+		ChatMessageDto dto4 = new ChatMessageDto("msg4", ChatCategory.QUESTION, "Q4", "User4", "user4", sessionId,
+			LocalDateTime.now(),
 			0);
 
 		when(chatRepository.existsBySessionId(String.valueOf(sessionId))).thenReturn(true);
