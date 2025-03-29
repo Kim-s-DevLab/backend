@@ -1,11 +1,14 @@
 package eightplusone.bit.fit.global.config;
 
-import eightplusone.bit.fit.domain.chat.dto.ChatMessageDto;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import eightplusone.bit.fit.global.pubsub.ChatSubscriber;
 import eightplusone.bit.fit.global.pubsub.LikeSubscriber;
 import io.lettuce.core.ClientOptions;
 import io.lettuce.core.SocketOptions;
 import io.lettuce.core.TimeoutOptions;
+import java.text.SimpleDateFormat;
 import java.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,12 +66,35 @@ public class RedisConfig {
 		return new LettuceConnectionFactory(redisConfig, clientConfig);
 	}
 
+	// @Bean
+	// public RedisTemplate<String, Object> redisTemplate() {
+	// 	RedisTemplate<String, Object> template = new RedisTemplate<>();
+	// 	Jackson2JsonRedisSerializer<ChatMessageDto> serializer = new Jackson2JsonRedisSerializer<>(
+	// 		ChatMessageDto.class);
+	// 	template.setConnectionFactory(redisConnectionFactory());
+	// 	template.setKeySerializer(new StringRedisSerializer());
+	// 	template.setValueSerializer(serializer);
+	// 	template.setHashKeySerializer(new StringRedisSerializer());
+	// 	template.setHashValueSerializer(new StringRedisSerializer());
+	// 	template.afterPropertiesSet();
+	// 	return template;
+	// }
 	@Bean
-	public RedisTemplate<String, Object> redisTemplate() {
+	public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
 		RedisTemplate<String, Object> template = new RedisTemplate<>();
-		Jackson2JsonRedisSerializer<ChatMessageDto> serializer = new Jackson2JsonRedisSerializer<>(
-			ChatMessageDto.class);
-		template.setConnectionFactory(redisConnectionFactory());
+		template.setConnectionFactory(connectionFactory);
+
+		// ✅ ObjectMapper 세팅
+		ObjectMapper objectMapper = new ObjectMapper();
+		objectMapper.registerModule(new JavaTimeModule());
+		objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+		objectMapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss"));
+
+		// ✅ 여전히 setObjectMapper 사용 (deprecated 무시)
+		Jackson2JsonRedisSerializer<Object> serializer = new Jackson2JsonRedisSerializer<>(Object.class);
+		serializer.setObjectMapper(objectMapper); // 🔥 현재는 이것밖에 방법이 없음
+
+		// ✅ Redis Template Serializer 설정
 		template.setKeySerializer(new StringRedisSerializer());
 		template.setValueSerializer(serializer);
 		template.setHashKeySerializer(new StringRedisSerializer());

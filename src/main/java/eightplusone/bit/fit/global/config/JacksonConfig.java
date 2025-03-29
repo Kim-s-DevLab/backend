@@ -1,5 +1,6 @@
 package eightplusone.bit.fit.global.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import java.time.LocalDateTime;
@@ -15,9 +16,11 @@ public class JacksonConfig {
 	private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATETIME_FORMAT);
 
 	@Bean
-	public Jackson2ObjectMapperBuilder jackson2ObjectMapperBuilder() {
-		return new Jackson2ObjectMapperBuilder()
-			.serializerByType(LocalDateTime.class, new LocalDateTimeSerializer(formatter))
-			.deserializerByType(LocalDateTime.class, new LocalDateTimeDeserializer(formatter));
+	public ObjectMapper objectMapper() {
+		Jackson2ObjectMapperBuilder builder = new Jackson2ObjectMapperBuilder();
+		builder.serializerByType(LocalDateTime.class, new LocalDateTimeSerializer(formatter));
+		builder.deserializerByType(LocalDateTime.class, new LocalDateTimeDeserializer(formatter));
+		builder.simpleDateFormat(DATETIME_FORMAT);
+		return builder.build();
 	}
 }
