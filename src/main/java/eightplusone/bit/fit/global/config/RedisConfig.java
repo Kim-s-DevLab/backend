@@ -78,18 +78,23 @@ public class RedisConfig {
 	// 	template.afterPropertiesSet();
 	// 	return template;
 	// }
+
 	@Bean
-	public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
+	public ObjectMapper redisObjectMapper() {
+		ObjectMapper objectMapper = new ObjectMapper();
+		objectMapper.registerModule(new JavaTimeModule());
+		objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+		return objectMapper;
+	}
+
+	@Bean
+	public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory,
+		ObjectMapper redisObjectMapper) {
 		RedisTemplate<String, Object> template = new RedisTemplate<>();
 		template.setConnectionFactory(connectionFactory);
 
-		// ✅ Jackson ObjectMapper 설정 (LocalDateTime 지원)
-		ObjectMapper objectMapper = new ObjectMapper()
-			.registerModule(new JavaTimeModule())
-			.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-
 		Jackson2JsonRedisSerializer<Object> serializer = new Jackson2JsonRedisSerializer<>(Object.class);
-		serializer.setObjectMapper(objectMapper); // deprecated이긴 하지만 현재 대체제 없음
+		serializer.setObjectMapper(redisObjectMapper);
 
 		template.setKeySerializer(new StringRedisSerializer());
 		template.setValueSerializer(serializer);
