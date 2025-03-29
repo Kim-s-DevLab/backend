@@ -3,10 +3,12 @@ package eightplusone.bit.fit.global.pubsub;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eightplusone.bit.fit.domain.chat.dto.ChatMessageDto;
 import eightplusone.bit.fit.domain.chat.entity.ChatMessage;
+import eightplusone.bit.fit.domain.user.repository.UserRedisRepository;
 import java.nio.charset.StandardCharsets;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 
@@ -15,9 +17,15 @@ import org.springframework.stereotype.Component;
 public class ChatSubscriber implements MessageListener {
 	private final SimpMessagingTemplate messagingTemplate;
 	private final ObjectMapper objectMapper = new ObjectMapper();
+	private final RedisTemplate<String, Object> redisTemplate;
+	private final UserRedisRepository userRedisRepository;
 
-	public ChatSubscriber(SimpMessagingTemplate messagingTemplate) {
+	public ChatSubscriber(SimpMessagingTemplate messagingTemplate,
+		RedisTemplate<String, Object> redisTemplate,
+		UserRedisRepository userRedisRepository) {
 		this.messagingTemplate = messagingTemplate;
+		this.redisTemplate = redisTemplate;
+		this.userRedisRepository = userRedisRepository;
 	}
 
 	@Override
@@ -28,31 +36,32 @@ public class ChatSubscriber implements MessageListener {
 
 			log.info("Redis에서 메시지 수신: 채널={}, 메시지={}", channelName, receivedMessage);
 
-			// ChatMessage 기준으로 역직렬화
 			ChatMessage chatMessage = objectMapper.readValue(receivedMessage, ChatMessage.class);
 
-			// 채널명에서 sessionId 추출 (chat-pub:3 → 3)
 			String sessionId = channelName.replace("chat-pub:", "");
 			String websocketDestination = "/sub/chat/" + sessionId;
 
-			// 필요한 필드만 넣어서 ChatMessageDto 구성 (name, likes 생략 가능)
+			// 이름 조회
+			String userName = userRedisRepository.getUserName(chatMessage.getUserId());
+
+			// 좋아요 수 조회
+			String zsetKey = "questions:session:" + sessionId;
+			Double score = redisTemplate.opsForZSet().score(zsetKey, chatMessage.getMessageId());
+			int likeCount = score != null ? score.intValue() : 0;
+
 			ChatMessageDto dto = new ChatMessageDto(
 				chatMessage.getMessageId(),
 				chatMessage.getCategory(),
 				chatMessage.getMessage(),
-				null, // name - Redis 캐시에서 조회하거나 null
+				userName != null ? userName : "알 수 없음",
 				chatMessage.getUserId(),
 				chatMessage.getSessionId(),
 				chatMessage.getTimestamp(),
-				0 // likes - 조회 안 했으면 기본값 0
+				likeCount
 			);
 
 			log.info("WebSocket으로 전송 시도: {} -> {}", websocketDestination, dto);
-
 			messagingTemplate.convertAndSend(websocketDestination, dto);
-
-			log.info("WebSocket으로 전송 완료: {}", websocketDestination);
-
 		} catch (Exception e) {
 			log.error("Redis 메시지 처리 중 오류", e);
 		}
