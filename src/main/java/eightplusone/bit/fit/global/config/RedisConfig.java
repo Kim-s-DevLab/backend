@@ -8,7 +8,6 @@ import eightplusone.bit.fit.global.pubsub.LikeSubscriber;
 import io.lettuce.core.ClientOptions;
 import io.lettuce.core.SocketOptions;
 import io.lettuce.core.TimeoutOptions;
-import java.text.SimpleDateFormat;
 import java.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -84,22 +83,19 @@ public class RedisConfig {
 		RedisTemplate<String, Object> template = new RedisTemplate<>();
 		template.setConnectionFactory(connectionFactory);
 
-		// ✅ ObjectMapper 세팅
-		ObjectMapper objectMapper = new ObjectMapper();
-		objectMapper.registerModule(new JavaTimeModule());
-		objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-		objectMapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss"));
+		// ✅ Jackson ObjectMapper 설정 (LocalDateTime 지원)
+		ObjectMapper objectMapper = new ObjectMapper()
+			.registerModule(new JavaTimeModule())
+			.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
-		// ✅ 여전히 setObjectMapper 사용 (deprecated 무시)
 		Jackson2JsonRedisSerializer<Object> serializer = new Jackson2JsonRedisSerializer<>(Object.class);
-		serializer.setObjectMapper(objectMapper); // 🔥 현재는 이것밖에 방법이 없음
+		serializer.setObjectMapper(objectMapper); // deprecated이긴 하지만 현재 대체제 없음
 
-		// ✅ Redis Template Serializer 설정
 		template.setKeySerializer(new StringRedisSerializer());
 		template.setValueSerializer(serializer);
 		template.setHashKeySerializer(new StringRedisSerializer());
-		template.setHashValueSerializer(new StringRedisSerializer());
-		template.afterPropertiesSet();
+		template.setHashValueSerializer(serializer);
+
 		return template;
 	}
 
