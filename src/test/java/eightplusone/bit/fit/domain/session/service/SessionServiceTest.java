@@ -236,11 +236,13 @@ class SessionServiceTest {
 
 		assertAll(
 			() -> assertThat(content.get(0).getTitle()).isEqualTo(session1.getTitle()),
+			() -> assertThat(content.get(0).getIsLive()).isEqualTo(session1.getIsLive()),
 			() -> assertThat(content.get(0).getSpeaker().getName()).isEqualTo(speaker1.getName()),
 			() -> assertThat(content.get(0).getTags().getField()).isEqualTo(tag1.getField()),
 			() -> assertThat(content.get(0).getIsMySession()).isFalse(),
 
 			() -> assertThat(content.get(1).getTitle()).isEqualTo(session4.getTitle()),
+			() -> assertThat(content.get(1).getIsLive()).isEqualTo(session4.getIsLive()),
 			() -> assertThat(content.get(1).getSpeaker().getName()).isEqualTo(speaker4.getName()),
 			() -> assertThat(content.get(1).getTags().getField()).isEqualTo(tag1.getField()),
 			() -> assertThat(content.get(0).getIsMySession()).isFalse()
@@ -293,11 +295,13 @@ class SessionServiceTest {
 
 		assertAll(
 			() -> assertThat(content.get(0).getTitle()).isEqualTo(session1.getTitle()),
+			() -> assertThat(content.get(0).getIsLive()).isEqualTo(session1.getIsLive()),
 			() -> assertThat(content.get(0).getSpeaker().getName()).isEqualTo(speaker1.getName()),
 			() -> assertThat(content.get(0).getTags().getField()).isEqualTo(tag1.getField()),
 			() -> assertThat(content.get(0).getIsMySession()).isTrue(),
 
 			() -> assertThat(content.get(1).getTitle()).isEqualTo(session4.getTitle()),
+			() -> assertThat(content.get(1).getIsLive()).isEqualTo(session4.getIsLive()),
 			() -> assertThat(content.get(1).getSpeaker().getName()).isEqualTo(speaker4.getName()),
 			() -> assertThat(content.get(1).getTags().getField()).isEqualTo(tag1.getField()),
 			() -> assertThat(content.get(1).getIsMySession()).isFalse()
@@ -354,26 +358,32 @@ class SessionServiceTest {
 
 		assertAll(
 			() -> assertThat(content.get(0).getTitle()).isEqualTo(session1.getTitle()),
+			() -> assertThat(content.get(0).getIsLive()).isEqualTo(session1.getIsLive()),
 			() -> assertThat(content.get(0).getSpeaker().getName()).isEqualTo(speaker1.getName()),
 			() -> assertThat(content.get(0).getTags().getField()).isEqualTo(tag1.getField()),
 
 			() -> assertThat(content.get(1).getTitle()).isEqualTo(session2.getTitle()),
+			() -> assertThat(content.get(1).getIsLive()).isEqualTo(session2.getIsLive()),
 			() -> assertThat(content.get(1).getSpeaker().getName()).isEqualTo(speaker2.getName()),
 			() -> assertThat(content.get(1).getTags().getField()).isEqualTo(tag2.getField()),
 
 			() -> assertThat(content.get(2).getTitle()).isEqualTo(session3.getTitle()),
+			() -> assertThat(content.get(2).getIsLive()).isEqualTo(session3.getIsLive()),
 			() -> assertThat(content.get(2).getSpeaker().getName()).isEqualTo(speaker3.getName()),
 			() -> assertThat(content.get(2).getTags().getField()).isEqualTo(tag3.getField()),
 
 			() -> assertThat(content.get(3).getTitle()).isEqualTo(session4.getTitle()),
+			() -> assertThat(content.get(3).getIsLive()).isEqualTo(session4.getIsLive()),
 			() -> assertThat(content.get(3).getSpeaker().getName()).isEqualTo(speaker4.getName()),
 			() -> assertThat(content.get(3).getTags().getField()).isEqualTo(tag4.getField()),
 
 			() -> assertThat(content.get(4).getTitle()).isEqualTo(session5.getTitle()),
+			() -> assertThat(content.get(4).getIsLive()).isEqualTo(session5.getIsLive()),
 			() -> assertThat(content.get(4).getSpeaker().getName()).isEqualTo(speaker5.getName()),
 			() -> assertThat(content.get(4).getTags().getField()).isEqualTo(tag5.getField()),
 
 			() -> assertThat(content.get(5).getTitle()).isEqualTo(session6.getTitle()),
+			() -> assertThat(content.get(5).getIsLive()).isEqualTo(session6.getIsLive()),
 			() -> assertThat(content.get(5).getSpeaker().getName()).isEqualTo(speaker6.getName()),
 			() -> assertThat(content.get(5).getTags().getField()).isEqualTo(tag6.getField())
 		);
@@ -443,31 +453,37 @@ class SessionServiceTest {
 
 		assertAll(
 			() -> assertThat(content.get(0).getTitle()).isEqualTo(session1.getTitle()),
+			() -> assertThat(content.get(0).getIsLive()).isEqualTo(session1.getIsLive()),
 			() -> assertThat(content.get(0).getSpeaker().getName()).isEqualTo(speaker1.getName()),
 			() -> assertThat(content.get(0).getTags().getField()).isEqualTo(tag1.getField()),
 			() -> assertThat(content.get(0).getIsMySession()).isTrue(),
 
 			() -> assertThat(content.get(1).getTitle()).isEqualTo(session2.getTitle()),
+			() -> assertThat(content.get(1).getIsLive()).isEqualTo(session2.getIsLive()),
 			() -> assertThat(content.get(1).getSpeaker().getName()).isEqualTo(speaker2.getName()),
 			() -> assertThat(content.get(1).getTags().getField()).isEqualTo(tag2.getField()),
 			() -> assertThat(content.get(1).getIsMySession()).isTrue(),
 
 			() -> assertThat(content.get(2).getTitle()).isEqualTo(session3.getTitle()),
+			() -> assertThat(content.get(2).getIsLive()).isEqualTo(session3.getIsLive()),
 			() -> assertThat(content.get(2).getSpeaker().getName()).isEqualTo(speaker3.getName()),
 			() -> assertThat(content.get(2).getTags().getField()).isEqualTo(tag3.getField()),
 			() -> assertThat(content.get(2).getIsMySession()).isFalse(),
 
 			() -> assertThat(content.get(3).getTitle()).isEqualTo(session4.getTitle()),
+			() -> assertThat(content.get(3).getIsLive()).isEqualTo(session4.getIsLive()),
 			() -> assertThat(content.get(3).getSpeaker().getName()).isEqualTo(speaker4.getName()),
 			() -> assertThat(content.get(3).getTags().getField()).isEqualTo(tag4.getField()),
 			() -> assertThat(content.get(3).getIsMySession()).isFalse(),
 
 			() -> assertThat(content.get(4).getTitle()).isEqualTo(session5.getTitle()),
+			() -> assertThat(content.get(4).getIsLive()).isEqualTo(session5.getIsLive()),
 			() -> assertThat(content.get(4).getSpeaker().getName()).isEqualTo(speaker5.getName()),
 			() -> assertThat(content.get(4).getTags().getField()).isEqualTo(tag5.getField()),
 			() -> assertThat(content.get(4).getIsMySession()).isFalse(),
 
 			() -> assertThat(content.get(5).getTitle()).isEqualTo(session6.getTitle()),
+			() -> assertThat(content.get(5).getIsLive()).isEqualTo(session6.getIsLive()),
 			() -> assertThat(content.get(5).getSpeaker().getName()).isEqualTo(speaker6.getName()),
 			() -> assertThat(content.get(5).getTags().getField()).isEqualTo(tag6.getField()),
 			() -> assertThat(content.get(5).getIsMySession()).isFalse()
@@ -503,10 +519,12 @@ class SessionServiceTest {
 
 		assertAll(
 			() -> assertThat(result.get(0).getTitle()).isEqualTo(session1.getTitle()),
+			() -> assertThat(result.get(0).getIsLive()).isEqualTo(session1.getIsLive()),
 			() -> assertThat(result.get(0).getSpeaker().getName()).isEqualTo(speaker1.getName()),
 			() -> assertThat(result.get(0).getTags().getField()).isEqualTo(tag1.getField()),
 
 			() -> assertThat(result.get(1).getTitle()).isEqualTo(session2.getTitle()),
+			() -> assertThat(result.get(1).getIsLive()).isEqualTo(session2.getIsLive()),
 			() -> assertThat(result.get(1).getSpeaker().getName()).isEqualTo(speaker2.getName()),
 			() -> assertThat(result.get(1).getTags().getField()).isEqualTo(tag2.getField())
 		);
@@ -552,11 +570,13 @@ class SessionServiceTest {
 
 		assertAll(
 			() -> assertThat(result.get(0).getTitle()).isEqualTo(session1.getTitle()),
+			() -> assertThat(result.get(0).getIsLive()).isEqualTo(session1.getIsLive()),
 			() -> assertThat(result.get(0).getSpeaker().getName()).isEqualTo(speaker1.getName()),
 			() -> assertThat(result.get(0).getTags().getField()).isEqualTo(tag1.getField()),
 			() -> assertThat(result.get(0).getIsMySession()).isTrue(),
 
 			() -> assertThat(result.get(1).getTitle()).isEqualTo(session2.getTitle()),
+			() -> assertThat(result.get(1).getIsLive()).isEqualTo(session2.getIsLive()),
 			() -> assertThat(result.get(1).getSpeaker().getName()).isEqualTo(speaker2.getName()),
 			() -> assertThat(result.get(1).getTags().getField()).isEqualTo(tag2.getField()),
 			() -> assertThat(result.get(1).getIsMySession()).isFalse()
@@ -728,7 +748,10 @@ class SessionServiceTest {
 		// then
 		assertThat(result).hasSize(3);
 		assertThat(result.get(0).getTitle()).isEqualTo(session1.getTitle());
+		assertThat(result.get(0).getIsLive()).isEqualTo(session1.getIsLive());
 		assertThat(result.get(1).getTitle()).isEqualTo(session2.getTitle());
+		assertThat(result.get(1).getIsLive()).isEqualTo(session2.getIsLive());
 		assertThat(result.get(2).getTitle()).isEqualTo(session3.getTitle());
+		assertThat(result.get(2).getIsLive()).isEqualTo(session3.getIsLive());
 	}
 }

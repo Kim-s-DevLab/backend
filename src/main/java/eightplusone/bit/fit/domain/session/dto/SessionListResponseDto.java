@@ -23,6 +23,9 @@ public class SessionListResponseDto {
 	@Schema(description = "세션 담기 여부", example = "true")
 	private Boolean isMySession;
 
+	@Schema(description = "세션 라이브 여부", example = "true")
+	private Boolean isLive;
+
 	@Schema(description = "연사 정보")
 	private SpeakerResponseDto speaker;
 
@@ -36,6 +39,7 @@ public class SessionListResponseDto {
 			.title(session.getTitle())
 			.summary(session.getSummary())
 			.isMySession(isMySession)
+			.isLive(session.getIsLive())
 			.speaker(speaker)
 			.tags(tags)
 			.build();
