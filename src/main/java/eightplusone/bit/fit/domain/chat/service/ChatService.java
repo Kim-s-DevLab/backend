@@ -82,11 +82,9 @@ public class ChatService {
 			redisTemplate.opsForZSet().add(zsetKey, message.getMessageId(), 0);
 		}
 
+		// 수정: 기존 objectMapper 사용 (생성 X)
 		String jsonMessage = objectMapper.writeValueAsString(message);
-		String redisKey = "chat-pub" + sessionId;
-
-		log.info("Redis 발행 메세지 : {} -> {}", redisKey, jsonMessage);
-		redisTemplate.convertAndSend(redisKey, dto);
+		redisTemplate.convertAndSend("chat-pub" + sessionId, dto);
 	}
 
 	// 특정 채팅방의 최근 메시지 조회
