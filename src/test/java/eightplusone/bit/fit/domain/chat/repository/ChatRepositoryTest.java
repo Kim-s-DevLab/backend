@@ -128,7 +128,7 @@ public class ChatRepositoryTest {
 		assertTrue(ttl >= expectedTtl - 10, "TTL이 강연시간 + 30분과 일치하지 않음");
 
 		// TTL을 5초로 변경하여 삭제되는지 테스트
-		redisTemplate.expire("chat-" + session.getSessionId(), Duration.ofSeconds(5));
+		redisTemplate.expire("chat-messages:" + session.getSessionId(), Duration.ofSeconds(5));
 
 		// 6초 대기 후 데이터가 삭제되었는지 확인
 		Thread.sleep(6000);

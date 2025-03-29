@@ -29,28 +29,17 @@ public class ChatMessage {
 	@Column(length = 300, nullable = false)
 	private String message; // 채팅 내용
 
-	private String timestamp; // 작성 시간
+	private LocalDateTime timestamp; // 작성 시간
 
-	// 기존 메시지를 새로 저장할 때 사용하는 생성자
 	@Builder
 	public ChatMessage(String messageId, Long sessionId, String userId, ChatCategory category, String message,
 		LocalDateTime timestamp) {
-		this.messageId = UUID.randomUUID().toString();
+		this.messageId = messageId != null ? messageId : UUID.randomUUID().toString();
 		this.sessionId = sessionId;
 		this.userId = userId;
 		this.category = category;
 		this.message = message;
-		this.timestamp = LocalDateTime.now().toString();
+		this.timestamp = timestamp != null ? timestamp : LocalDateTime.now();
 	}
 
-	// Redis에서 가져온 기존 메시지를 복원할 때 사용하는 생성자
-	public ChatMessage(String messageId, Long sessionId, String userId, ChatCategory category, String message,
-		String timestamp) {
-		this.messageId = messageId;  // 기존 메시지 ID 유지
-		this.sessionId = sessionId;
-		this.userId = userId;
-		this.category = category;
-		this.message = message;
-		this.timestamp = timestamp;
-	}
 }
