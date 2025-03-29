@@ -52,22 +52,27 @@ public class ChatService {
 	}
 
 	public void sendMessageWithEmail(ChatMessageDto dto, String email, Long sessionId) throws JsonProcessingException {
-		if (dto.getMessage() == null || dto.getMessage().trim().isEmpty())
+		if (dto.getMessage() == null || dto.getMessage().trim().isEmpty()) {
 			throw new CustomException(ErrorCode.INVALID_MESSAGE_FORMAT);
+		}
 
-		if (dto.getMessage().length() > 300)
+		if (dto.getMessage().length() > 300) {
 			throw new CustomException(ErrorCode.MESSAGE_TOO_LONG);
+		}
 
-		if (!chatRepository.existsBySessionId(String.valueOf(sessionId)))
+		if (!chatRepository.existsBySessionId(String.valueOf(sessionId))) {
 			throw new CustomException(ErrorCode.CHAT_SESSION_NOT_FOUND);
+		}
 
 		var user = userRepository.findByEmail(email)
 			.orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
 		String userId = user.getId().toString();
 		String name = user.getName();
+
 		userRedisRepository.saveUserName(userId, name);
 
+		// ✅ 메시지 생성
 		ChatMessage message = ChatMessage.builder()
 			.sessionId(sessionId)
 			.userId(userId)
@@ -77,14 +82,27 @@ public class ChatService {
 
 		chatRepository.saveMessage(message);
 
+		// ✅ 질문이면 ZSet에도 추가
 		if (message.getCategory() == ChatCategory.QUESTION) {
 			String zsetKey = "questions:session:" + sessionId;
 			redisTemplate.opsForZSet().add(zsetKey, message.getMessageId(), 0);
 		}
 
-		// 수정: 기존 objectMapper 사용 (생성 X)
-		String jsonMessage = objectMapper.writeValueAsString(message);
-		redisTemplate.convertAndSend("chat-pub" + sessionId, dto);
+		// ✅ ChatMessageDto로 다시 만들어서 발행 (messageId, timestamp 포함!)
+		ChatMessageDto dtoToSend = new ChatMessageDto(
+			message.getMessageId(),
+			message.getCategory(),
+			message.getMessage(),
+			name,
+			message.getUserId(),
+			message.getSessionId(),
+			message.getTimestamp(),
+			0
+		);
+
+		String redisKey = "chat-pub:" + sessionId;
+		log.info("Redis 발행 메세지 : {} -> {}", redisKey, dtoToSend);
+		redisTemplate.convertAndSend(redisKey, dtoToSend);  // ✅ messageId 있는 dto 전송
 	}
 
 	// 특정 채팅방의 최근 메시지 조회
