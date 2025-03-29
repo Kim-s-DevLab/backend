@@ -3,6 +3,7 @@ package eightplusone.bit.fit.domain.chat.dto;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import eightplusone.bit.fit.domain.chat.enums.ChatCategory;
+import java.time.LocalDateTime;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -15,7 +16,7 @@ public class ChatMessageDto {
 	private String name;
 	private String userId;
 	private Long sessionId;
-	private String timestamp;
+	private LocalDateTime timestamp;
 	private int likes;
 
 	@JsonCreator
@@ -26,7 +27,7 @@ public class ChatMessageDto {
 		@JsonProperty("name") String name,
 		@JsonProperty("userId") String userId,
 		@JsonProperty("sessionId") Long sessionId,
-		@JsonProperty("timestamp") String timestamp,
+		@JsonProperty("timestamp") LocalDateTime timestamp,
 		@JsonProperty("likes") int likes) {
 		this.messageId = messageId;
 		this.category = category;
