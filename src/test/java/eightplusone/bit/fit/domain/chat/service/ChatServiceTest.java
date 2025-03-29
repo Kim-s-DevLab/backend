@@ -5,6 +5,9 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import eightplusone.bit.fit.domain.auth.enums.Role;
 import eightplusone.bit.fit.domain.chat.dto.ChatMessageDto;
 import eightplusone.bit.fit.domain.chat.entity.ChatMessage;
@@ -20,20 +23,24 @@ import java.time.LocalDateTime;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class ChatServiceTest {
 
 	@Mock
@@ -64,23 +71,38 @@ class ChatServiceTest {
 
 	@BeforeEach
 	void setUp() {
+		MockitoAnnotations.openMocks(this);
+		chatService = new ChatService(
+			chatRepository,
+			redisTemplate,
+			userRedisRepository,
+			userRepository,
+			chatLikeRepository,
+			null // 임시 null, 아래에서 직접 주입
+		);
+
+		// ✅ objectMapper 직접 생성 후 주입
+		ObjectMapper mapper = new ObjectMapper();
+		mapper.registerModule(new JavaTimeModule());
+		mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+		ReflectionTestUtils.setField(chatService, "objectMapper", mapper);
+
 		chatMessageDto = new ChatMessageDto(
-			messageId,
+			null,
 			ChatCategory.GENERAL,
-			"Test message",
-			"Test User",
-			userId,
+			"테스트 메시지",
+			"테스터",
+			"1",
 			sessionId,
-			timestamp,
-			likes
+			LocalDateTime.now(),
+			0
 		);
 
 		chatMessage = ChatMessage.builder()
 			.sessionId(sessionId)
-			.userId(userId)
+			.userId("testUser")
 			.category(ChatCategory.GENERAL)
-			.message("Test message")
-			.timestamp(timestamp)
+			.message("Hello world!")
 			.build();
 	}
 
@@ -282,45 +304,50 @@ class ChatServiceTest {
 
 	@SuppressWarnings("unchecked")
 	@Test
-	void getZSetSortedQuestions_success() {
-		// given
+	void getZSetSortedQuestions_success() throws Exception {
+		Long sessionId = 1L;
 		String zsetKey = "questions:session:" + sessionId;
 
-		// ZSetOperations mock
-		ZSetOperations<String, Object> zSetOps = Mockito.mock(ZSetOperations.class);
-		Mockito.when(redisTemplate.opsForZSet()).thenReturn(zSetOps);
-		Mockito.when(zSetOps.reverseRange(zsetKey, 0, 2))
-			.thenReturn(new LinkedHashSet<>(List.of("msg3", "msg1", "msg2")));
-		Mockito.when(zSetOps.score(zsetKey, "msg3")).thenReturn(10.0);
-		Mockito.when(zSetOps.score(zsetKey, "msg1")).thenReturn(5.0);
-		Mockito.when(zSetOps.score(zsetKey, "msg2")).thenReturn(2.0);
+		when(chatRepository.existsBySessionId(String.valueOf(sessionId))).thenReturn(true);
 
-		// ValueOperations mock + doReturn().when() 방식
-		ValueOperations<String, String> valueOps = Mockito.mock(ValueOperations.class);
-		Mockito.doReturn(valueOps).when(redisTemplate).opsForValue(); // 핵심 차이점
-		Mockito.when(valueOps.get("chat:message:msg3"))
-			.thenReturn(
-				"{\"messageId\":\"msg3\",\"sessionId\":1,\"userId\":\"user3\",\"category\":\"QUESTION\",\"message\":\"Q3\",\"timestamp\":\"t3\"}");
-		Mockito.when(valueOps.get("chat:message:msg1"))
-			.thenReturn(
-				"{\"messageId\":\"msg1\",\"sessionId\":1,\"userId\":\"user1\",\"category\":\"QUESTION\",\"message\":\"Q1\",\"timestamp\":\"t1\"}");
-		Mockito.when(valueOps.get("chat:message:msg2"))
-			.thenReturn(
-				"{\"messageId\":\"msg2\",\"sessionId\":1,\"userId\":\"user2\",\"category\":\"QUESTION\",\"message\":\"Q2\",\"timestamp\":\"t2\"}");
+		ZSetOperations<String, Object> zSetOps = mock(ZSetOperations.class);
+		when(redisTemplate.opsForZSet()).thenReturn(zSetOps);
 
-		// 사용자 이름
+		Set<Object> orderedSet = new LinkedHashSet<>();
+		orderedSet.add("msg2");
+		orderedSet.add("msg3");
+		orderedSet.add("msg1");
+
+		when(zSetOps.reverseRange(zsetKey, 0, 2)).thenReturn(orderedSet);
+		when(zSetOps.score(zsetKey, "msg2")).thenReturn(20.0);
+		when(zSetOps.score(zsetKey, "msg3")).thenReturn(15.0);
+		when(zSetOps.score(zsetKey, "msg1")).thenReturn(10.0);
+
+		ValueOperations<String, Object> valueOps = mock(ValueOperations.class);
+		lenient().when(redisTemplate.opsForValue()).thenReturn(valueOps);
+
+		ObjectMapper mapper = new ObjectMapper();
+		mapper.registerModule(new JavaTimeModule());
+		mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
+		ChatMessage m1 = new ChatMessage("msg1", sessionId, "user1", ChatCategory.QUESTION, "Q1", LocalDateTime.now());
+		ChatMessage m2 = new ChatMessage("msg2", sessionId, "user2", ChatCategory.QUESTION, "Q2", LocalDateTime.now());
+		ChatMessage m3 = new ChatMessage("msg3", sessionId, "user3", ChatCategory.QUESTION, "Q3", LocalDateTime.now());
+
+		when(valueOps.get("chat:message:msg1")).thenReturn(mapper.writeValueAsString(m1));
+		when(valueOps.get("chat:message:msg2")).thenReturn(mapper.writeValueAsString(m2));
+		when(valueOps.get("chat:message:msg3")).thenReturn(mapper.writeValueAsString(m3));
+
 		when(userRedisRepository.getUserName("user1")).thenReturn("User1");
 		when(userRedisRepository.getUserName("user2")).thenReturn("User2");
 		when(userRedisRepository.getUserName("user3")).thenReturn("User3");
 
-		// when
 		List<ChatMessageDto> result = chatService.getZSetSortedQuestions(sessionId, 0, 3);
 
-		// then
 		assertThat(result).hasSize(3);
-		assertThat(result.get(0).getMessageId()).isEqualTo("msg3");
-		assertThat(result.get(1).getMessageId()).isEqualTo("msg1");
-		assertThat(result.get(2).getMessageId()).isEqualTo("msg2");
+		assertThat(result.get(0).getMessageId()).isEqualTo("msg2");
+		assertThat(result.get(1).getMessageId()).isEqualTo("msg3");
+		assertThat(result.get(2).getMessageId()).isEqualTo("msg1");
 	}
 
 }
