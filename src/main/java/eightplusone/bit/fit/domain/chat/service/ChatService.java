@@ -261,7 +261,7 @@ public class ChatService {
 
 		return messageIds.stream()
 			.map(messageIdObj -> {
-				String messageId = messageIdObj.toString();
+				String messageId = messageIdObj.toString().replace("\"", "");
 				String raw = (String)redisTemplate.opsForValue().get("chat:message:" + messageId);
 				if (raw == null)
 					return null;
