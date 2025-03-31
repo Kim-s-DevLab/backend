@@ -135,6 +135,10 @@ public class ChatService {
 		}
 		chatLikeRepository.likeMessage(likeKey, userId);
 
+		// ZSet score 증가 추가
+		String zsetKey = "questions:session:" + sessionId;
+		redisTemplate.opsForZSet().incrementScore(zsetKey, messageId, 1);
+
 		// 좋아요 개수 조회
 		int updatedLikeCount = getLikeCount(sessionId, messageId);
 
