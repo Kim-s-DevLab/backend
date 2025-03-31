@@ -263,8 +263,10 @@ public class ChatService {
 			.map(messageIdObj -> {
 				String messageId = messageIdObj.toString().replace("\"", "");
 				String raw = (String)redisTemplate.opsForValue().get("chat:message:" + messageId);
-				if (raw == null)
+				if (raw == null) {
+					log.warn("⚠️ 메시지를 찾을 수 없습니다. messageId: {}", messageId);
 					return null;
+				}
 
 				try {
 					ChatMessage msg = objectMapper.readValue(raw, ChatMessage.class);
