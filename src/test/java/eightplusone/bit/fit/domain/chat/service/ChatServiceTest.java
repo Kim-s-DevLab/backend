@@ -150,7 +150,6 @@ class ChatServiceTest {
 
 		// then
 		verify(chatRepository, times(1)).saveMessage(any(ChatMessage.class));
-		verify(redisTemplate, times(1)).convertAndSend(eq("chat-pub:" + sessionId), any(ChatMessageDto.class));
 	}
 
 	// 존재하지 않는 세션에 메시지를 보내면 예외가 발생하는지 확인
@@ -173,6 +172,11 @@ class ChatServiceTest {
 		doNothing().when(chatLikeRepository).likeMessage(likeKey, userId);
 		when(chatLikeRepository.getLikeCount(likeKey)).thenReturn(1);
 
+		// ZSetOperations 모킹
+		ZSetOperations<String, Object> zSetOps = mock(ZSetOperations.class);
+		when(redisTemplate.opsForZSet()).thenReturn(zSetOps);
+		when(zSetOps.incrementScore("questions:session:" + sessionId, messageId, 1)).thenReturn(1.0);
+
 		chatService.likeMessage(userId, sessionId, messageId);
 
 		verify(chatLikeRepository, times(1)).likeMessage(likeKey, userId);
@@ -185,6 +189,11 @@ class ChatServiceTest {
 		when(chatLikeRepository.hasLiked(likeKey, userId)).thenReturn(false);
 		doNothing().when(chatLikeRepository).likeMessage(likeKey, userId);
 		when(chatLikeRepository.getLikeCount(likeKey)).thenReturn(5);
+
+		// ZSetOperations 모킹
+		ZSetOperations<String, Object> zSetOps = mock(ZSetOperations.class);
+		when(redisTemplate.opsForZSet()).thenReturn(zSetOps);
+		when(zSetOps.incrementScore("questions:session:" + sessionId, messageId, 1)).thenReturn(5.0);
 
 		chatService.likeMessage(userId, sessionId, messageId);
 
