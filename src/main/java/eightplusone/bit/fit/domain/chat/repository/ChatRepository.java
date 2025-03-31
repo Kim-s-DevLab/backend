@@ -1,6 +1,5 @@
 package eightplusone.bit.fit.domain.chat.repository;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eightplusone.bit.fit.domain.chat.entity.ChatMessage;
 import eightplusone.bit.fit.domain.session.entity.Session;
@@ -38,16 +37,6 @@ public class ChatRepository {
 	public void saveMessage(ChatMessage message) {
 		String chatKey = CHAT_MESSAGE_KEY_PREFIX + message.getSessionId();
 		redisTemplate.opsForList().rightPush(chatKey, message);
-
-		// 개별 메시지 본문 저장
-		try {
-			redisTemplate.opsForValue().set(
-				"chat:message:" + message.getMessageId(),
-				objectMapper.writeValueAsString(message)
-			);
-		} catch (JsonProcessingException e) {
-			log.error("❌ 메시지 직렬화 실패: {}", e.getMessage());
-		}
 
 		Session session = sessionRepository.findById(message.getSessionId()).orElse(null);
 		if (session != null) {
