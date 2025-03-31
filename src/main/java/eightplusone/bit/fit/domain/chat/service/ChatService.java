@@ -72,7 +72,7 @@ public class ChatService {
 
 		userRedisRepository.saveUserName(userId, name);
 
-		// ✅ 메시지 생성
+		// 메시지 생성
 		ChatMessage message = ChatMessage.builder()
 			.sessionId(sessionId)
 			.userId(userId)
@@ -82,13 +82,13 @@ public class ChatService {
 
 		chatRepository.saveMessage(message);
 
-		// ✅ 질문이면 ZSet에도 추가
+		// 질문이면 ZSet에도 추가
 		if (message.getCategory() == ChatCategory.QUESTION) {
 			String zsetKey = "questions:session:" + sessionId;
 			redisTemplate.opsForZSet().add(zsetKey, message.getMessageId(), 0);
 		}
 
-		// ✅ ChatMessageDto로 다시 만들어서 발행 (messageId, timestamp 포함!)
+		// ChatMessageDto로 다시 만들어서 발행 (messageId, timestamp 포함!)
 		ChatMessageDto dtoToSend = new ChatMessageDto(
 			message.getMessageId(),
 			message.getCategory(),
@@ -102,7 +102,7 @@ public class ChatService {
 
 		String redisKey = "chat-pub:" + sessionId;
 		log.info("Redis 발행 메세지 : {} -> {}", redisKey, dtoToSend);
-		redisTemplate.convertAndSend(redisKey, dtoToSend);  // ✅ messageId 있는 dto 전송
+		redisTemplate.convertAndSend(redisKey, dtoToSend);  // messageId 있는 dto 전송
 	}
 
 	// 특정 채팅방의 최근 메시지 조회
@@ -134,6 +134,10 @@ public class ChatService {
 			throw new CustomException(ErrorCode.DUPLICATE_LIKE);
 		}
 		chatLikeRepository.likeMessage(likeKey, userId);
+
+		// ZSet score 증가
+		String zsetKey = "questions:session:" + sessionId;
+		redisTemplate.opsForZSet().incrementScore(zsetKey, messageId, 1);
 
 		// 좋아요 개수 조회
 		int updatedLikeCount = getLikeCount(sessionId, messageId);
@@ -257,7 +261,7 @@ public class ChatService {
 
 		return messageIds.stream()
 			.map(messageIdObj -> {
-				String messageId = messageIdObj.toString();
+				String messageId = messageIdObj.toString().replace("\"", "");
 				String raw = (String)redisTemplate.opsForValue().get("chat:message:" + messageId);
 				if (raw == null)
 					return null;

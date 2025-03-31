@@ -67,20 +67,6 @@ public class RedisConfig {
 		return new LettuceConnectionFactory(redisConfig, clientConfig);
 	}
 
-	// @Bean
-	// public RedisTemplate<String, Object> redisTemplate() {
-	// 	RedisTemplate<String, Object> template = new RedisTemplate<>();
-	// 	Jackson2JsonRedisSerializer<ChatMessageDto> serializer = new Jackson2JsonRedisSerializer<>(
-	// 		ChatMessageDto.class);
-	// 	template.setConnectionFactory(redisConnectionFactory());
-	// 	template.setKeySerializer(new StringRedisSerializer());
-	// 	template.setValueSerializer(serializer);
-	// 	template.setHashKeySerializer(new StringRedisSerializer());
-	// 	template.setHashValueSerializer(new StringRedisSerializer());
-	// 	template.afterPropertiesSet();
-	// 	return template;
-	// }
-
 	@Bean
 	public ObjectMapper redisObjectMapper() {
 		ObjectMapper objectMapper = new ObjectMapper();
