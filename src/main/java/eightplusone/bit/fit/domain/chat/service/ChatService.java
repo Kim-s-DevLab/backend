@@ -106,11 +106,35 @@ public class ChatService {
 	}
 
 	// 특정 채팅방의 최근 메시지 조회
-	public List<Object> getRecentMessages(String sessionId) {
+	public List<ChatMessageDto> getRecentMessages(String sessionId) {
 		if (!chatRepository.existsBySessionId(sessionId)) {
 			throw new CustomException(ErrorCode.CHAT_SESSION_NOT_FOUND);
 		}
-		return chatRepository.getRecentMessages(sessionId);
+
+		List<Object> rawMessages = chatRepository.getRecentMessages(sessionId);
+		return rawMessages.stream()
+			.map(obj -> {
+				if (obj instanceof ChatMessage message) {
+					String userName = userRedisRepository.getUserName(message.getUserId());
+					Double score = redisTemplate.opsForZSet()
+						.score("questions:session:" + sessionId, message.getMessageId());
+					int likeCount = score != null ? score.intValue() : 0;
+
+					return new ChatMessageDto(
+						message.getMessageId(),
+						message.getCategory(),
+						message.getMessage(),
+						userName != null ? userName : "알 수 없음",
+						message.getUserId(),
+						message.getSessionId(),
+						message.getTimestamp(),
+						likeCount
+					);
+				}
+				return null;
+			})
+			.filter(Objects::nonNull)
+			.toList();
 	}
 
 	// 특정 채팅방 데이터 삭제 (강연 종료 후)
