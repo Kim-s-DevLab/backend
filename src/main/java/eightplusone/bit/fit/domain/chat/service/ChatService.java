@@ -89,16 +89,16 @@ public class ChatService {
 		}
 
 		// ChatMessageDto로 다시 만들어서 발행 (messageId, timestamp 포함!)
-		ChatMessageDto dtoToSend = new ChatMessageDto(
-			message.getMessageId(),
-			message.getCategory(),
-			message.getMessage(),
-			name,
-			message.getUserId(),
-			message.getSessionId(),
-			message.getTimestamp(),
-			0
-		);
+		ChatMessageDto dtoToSend = ChatMessageDto.builder()
+			.messageId(message.getMessageId())
+			.category(message.getCategory())
+			.message(message.getMessage())
+			.name(name)
+			.userId(message.getUserId())
+			.sessionId(message.getSessionId())
+			.timestamp(message.getTimestamp())
+			.likes(0)
+			.build();
 
 		String redisKey = "chat-pub:" + sessionId;
 		log.info("Redis 발행 메세지 : {} -> {}", redisKey, dtoToSend);
@@ -120,16 +120,16 @@ public class ChatService {
 						.score("questions:session:" + sessionId, message.getMessageId());
 					int likeCount = score != null ? score.intValue() : 0;
 
-					return new ChatMessageDto(
-						message.getMessageId(),
-						message.getCategory(),
-						message.getMessage(),
-						userName != null ? userName : "알 수 없음",
-						message.getUserId(),
-						message.getSessionId(),
-						message.getTimestamp(),
-						likeCount
-					);
+					return ChatMessageDto.builder()
+						.messageId(message.getMessageId())
+						.category(message.getCategory())
+						.message(message.getMessage())
+						.name(userName != null ? userName : "알 수 없음")
+						.userId(message.getUserId())
+						.sessionId(message.getSessionId())
+						.timestamp(message.getTimestamp())
+						.likes(likeCount)
+						.build();
 				}
 				return null;
 			})
@@ -260,16 +260,16 @@ public class ChatService {
 
 				log.info("🔍 userRedisRepository.getUserName({}) → {}", msg.getUserId(), userName);
 
-				return new ChatMessageDto(
-					msg.getMessageId(),
-					msg.getCategory(),
-					msg.getMessage(),
-					userName != null ? userName : "알 수 없음",
-					msg.getUserId(),
-					msg.getSessionId(),
-					msg.getTimestamp(),
-					likeCount
-				);
+				return ChatMessageDto.builder()
+					.messageId(msg.getMessageId())
+					.category(msg.getCategory())
+					.message(msg.getMessage())
+					.name(userName != null ? userName : "알 수 없음")
+					.userId(msg.getUserId())
+					.sessionId(msg.getSessionId())
+					.timestamp(msg.getTimestamp())
+					.likes(likeCount)
+					.build();
 			})
 			.collect(Collectors.toList());
 	}
@@ -298,16 +298,17 @@ public class ChatService {
 					Double score = redisTemplate.opsForZSet().score(zsetKey, messageId);
 					int likeCount = score != null ? score.intValue() : 0;
 
-					return new ChatMessageDto(
-						msg.getMessageId(),
-						msg.getCategory(),
-						msg.getMessage(),
-						userName != null ? userName : "알 수 없음",
-						msg.getUserId(),
-						msg.getSessionId(),
-						msg.getTimestamp(),
-						likeCount
-					);
+					return ChatMessageDto.builder()
+						.messageId(msg.getMessageId())
+						.category(msg.getCategory())
+						.message(msg.getMessage())
+						.name(userName != null ? userName : "알 수 없음")
+						.userId(msg.getUserId())
+						.sessionId(msg.getSessionId())
+						.timestamp(msg.getTimestamp())
+						.likes(likeCount)
+						.build();
+
 				} catch (JsonProcessingException e) {
 					log.error("❌ 메시지 역직렬화 실패: {}", e.getMessage());
 					return null;
