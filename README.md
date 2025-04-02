@@ -1,5 +1,5 @@
 ![image](https://github.com/user-attachments/assets/b50ed93c-8dbe-4386-9b5c-8b3117d91ecf)
-- **배포 URL** : https://fit-conf.shop/main
+- **배포 URL** : https://fit-conference.shop
 
 </br>
 
@@ -12,6 +12,11 @@
 3. **실시간 Q&A 및 투표** - 모바일을 통한 질문 및 투표 기반 인기 질문 상위 노출
 4. **강연 미리담기 시스템** - 관심 강연을 사전 등록하여 일정 최적화
 5. **맞춤 강연 추천** - 참가자의 관심사를 분석하여 맞춤 강연 추천
+
+
+![스크린샷 2025-04-02 오후 9 49 28](https://github.com/user-attachments/assets/5158a55f-3bf0-4b50-a7a7-23f507252169)
+![스크린샷 2025-04-02 오후 9 49 35](https://github.com/user-attachments/assets/96a28194-fa0d-4be1-b43f-b6c234692416)
+![스크린샷 2025-04-02 오후 9 49 57](https://github.com/user-attachments/assets/89d8acc5-a4be-4e47-863a-6cc217d095c6)
 
 </br>
 
@@ -111,6 +116,11 @@
 | 회원 탈퇴 요청            | `DELETE`   | `/api/v1/users`                     |
 
 
+
+![스크린샷 2025-04-02 오후 9 46 54](https://github.com/user-attachments/assets/26186908-b39c-48c3-bfde-be3abebdf496)
+
+
+
 ### 🔐 Auth
 
 | 기능                    | 메서드   | URL                                         |
@@ -118,6 +128,10 @@
 | 쿠키의 토큰 헤더 반환 요청 | `POST`  | `/api/v1/auth/token-exchange`              |
 | 토큰 재발급 요청         | `POST`  | `/api/v1/auth/reissue`                     |
 | 로그아웃 요청            | `POST`  | `/api/v1/auth/logout`                      |
+
+
+
+![스크린샷 2025-04-02 오후 9 44 06](https://github.com/user-attachments/assets/cebc7f6a-d6b1-4941-8c5e-f34deb84fc9a)
 
 
 ### 💬 Chat
@@ -134,6 +148,10 @@
 | 채팅 데이터 삭제         | `DELETE` | `/api/v1/chat/{sessionId}/clear`                               |
 
 
+
+![스크린샷 2025-04-02 오후 9 49 05](https://github.com/user-attachments/assets/ab129303-88b7-472f-882c-c176fdc70405)
+
+
 ### 🗓️ My Session
 
 | 기능                        | 메서드   | URL                                      |
@@ -144,6 +162,11 @@
 | 좋아요한 세션 목록 조회     | `GET`    | `/api/v1/users/sessions/like`            |
 | 세션 좋아요 요청            | `POST`   | `/api/v1/users/sessions/like`            |
 | 세션 좋아요 취소 요청       | `DELETE` | `/api/v1/users/sessions/like`            |
+
+
+
+![스크린샷 2025-04-02 오후 9 50 15](https://github.com/user-attachments/assets/d54f09e3-f36e-43fd-9a9c-17558c620024)
+![스크린샷 2025-04-02 오후 9 50 21](https://github.com/user-attachments/assets/eec9f668-11ba-44d8-ba00-6076d5ed2241)
 
 
 ### 🚪 Enter
@@ -164,9 +187,28 @@
 | 세션 상세 조회            | `GET`  | `/api/v1/session/{sessionId}`            |
 
 
+
+![스크린샷 2025-04-02 오후 9 45 18](https://github.com/user-attachments/assets/906b1c16-58de-40d3-8326-e10a9fd05a3d)
+![스크린샷 2025-04-02 오후 9 45 29](https://github.com/user-attachments/assets/622c41a9-b80f-4dac-af89-994833965ed8)
+
+
+
 ### 🎤 Speaker
 
 | 기능         | 메서드 | URL                    |
 |--------------|--------|-------------------------|
 | 연사 전체 조회 | `GET`  | `/api/v1/speaker`      |
+
+
+### 🎵 오디오 스트리밍
+![스크린샷 2025-04-02 오후 9 47 26](https://github.com/user-attachments/assets/79cbe169-a132-4c14-a429-a44988446e37)
+
+### 📺 라이브 영상 시청
+![스크린샷 2025-04-02 오후 9 47 18](https://github.com/user-attachments/assets/2d788cb0-b534-4348-880a-cfcfbfb51b10)
+
+
+
+
+## 시연 영상
+[FiT_Final.mp4.zip](https://github.com/user-attachments/files/19568071/FiT_Final.1.mp4.zip)
 
