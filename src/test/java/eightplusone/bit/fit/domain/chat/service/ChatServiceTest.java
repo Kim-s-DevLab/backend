@@ -226,6 +226,10 @@ class ChatServiceTest {
 		when(chatLikeRepository.hasLiked(likeKey, userId)).thenReturn(true);
 		doNothing().when(chatLikeRepository).unlikeMessage(likeKey, userId, sessionId, messageId);
 
+		//redisTemplate.opsForZSet() 호출 시 모킹한 ZSetOperations 반환하도록 설정
+		ZSetOperations<String, Object> zSetOps = mock(ZSetOperations.class);
+		when(redisTemplate.opsForZSet()).thenReturn(zSetOps);
+
 		chatService.unlikeMessage(userId, sessionId, messageId);
 
 		verify(chatLikeRepository, times(1)).unlikeMessage(likeKey, userId, sessionId, messageId);
