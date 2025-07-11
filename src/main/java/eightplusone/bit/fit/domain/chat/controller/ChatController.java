@@ -98,14 +98,6 @@ public class ChatController {
 		chatService.unlikeMessageWithEmail(principal.getName(), sessionId, messageId);
 	}
 
-	@Operation(summary = "질문 메시지 정렬", description = "특정 세션의 질문 메시지에서 가장 좋아요를 많이 받은 3개만 반환합니다.")
-	@GetMapping("/questions/{sessionId}")
-	public List<ChatMessageDto> getSortedQuestions(
-		@Parameter(description = "채팅 세션 ID", example = "1234") @PathVariable String sessionId
-	) {
-		return chatService.getSortedQuestionMessages(Long.valueOf(sessionId));
-	}
-
 	@GetMapping("/likes/{sessionId}/{messageId}")
 	public ResponseEntity<Boolean> hasLiked(@PathVariable Long sessionId,
 		@PathVariable String messageId,
