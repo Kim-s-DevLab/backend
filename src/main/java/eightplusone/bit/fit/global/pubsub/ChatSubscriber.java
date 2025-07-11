@@ -18,16 +18,10 @@ import org.springframework.stereotype.Component;
 public class ChatSubscriber implements MessageListener {
 	private final SimpMessagingTemplate messagingTemplate;
 	private final ObjectMapper objectMapper;
-	private final RedisTemplate<String, Object> redisTemplate;
-	private final UserRedisRepository userRedisRepository;
 
-	public ChatSubscriber(SimpMessagingTemplate messagingTemplate, ObjectMapper objectMapper,
-		RedisTemplate<String, Object> redisTemplate,
-		UserRedisRepository userRedisRepository) {
+	public ChatSubscriber(SimpMessagingTemplate messagingTemplate, ObjectMapper objectMapper) {
 		this.messagingTemplate = messagingTemplate;
 		this.objectMapper = objectMapper;
-		this.redisTemplate = redisTemplate;
-		this.userRedisRepository = userRedisRepository;
 	}
 
 	@Override
