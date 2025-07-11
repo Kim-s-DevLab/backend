@@ -3,13 +3,12 @@ package eightplusone.bit.fit.global.pubsub;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eightplusone.bit.fit.domain.chat.dto.ChatMessageDto;
-import eightplusone.bit.fit.domain.user.repository.UserRedisRepository;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 
@@ -25,7 +24,7 @@ public class ChatSubscriber implements MessageListener {
 	}
 
 	@Override
-	public void onMessage(Message message, byte[] pattern) {
+	public void onMessage(@NonNull Message message, byte[] pattern) {
 		try {
 			String raw = new String(message.getBody(), StandardCharsets.UTF_8);
 			String channel = new String(message.getChannel(), StandardCharsets.UTF_8);
