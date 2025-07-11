@@ -1,9 +1,11 @@
 package eightplusone.bit.fit.global.pubsub;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eightplusone.bit.fit.domain.chat.dto.ChatMessageDto;
 import eightplusone.bit.fit.domain.user.repository.UserRedisRepository;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
@@ -41,6 +43,15 @@ public class ChatSubscriber implements MessageListener {
 				return;
 			}
 
+			// TOP3 처리
+			if (channel.startsWith("chat-top3:")) {
+				String sessionId = channel.substring("chat-top3:".length());
+				List<ChatMessageDto> top3 = objectMapper.readValue(raw, new TypeReference<List<ChatMessageDto>>() {});
+				messagingTemplate.convertAndSend("/sub/top3/" + sessionId, top3);
+				log.info("✅ TOP3 메시지 WebSocket 전송 완료 (세션 {}): {}", sessionId, top3);
+				return;
+			}
+
 			ChatMessageDto dto = objectMapper.readValue(raw, ChatMessageDto.class);
 
 			if (dto.getMessageId() == null) {
@@ -49,6 +60,7 @@ public class ChatSubscriber implements MessageListener {
 			}
 
 			messagingTemplate.convertAndSend("/sub/chat/" + dto.getSessionId(), dto);
+			log.info("✅ 채팅 메시지 WebSocket 전송 완료: {}", dto);
 		} catch (Exception e) {
 			log.error("Redis 메시지 처리 중 오류", e);
 		}
