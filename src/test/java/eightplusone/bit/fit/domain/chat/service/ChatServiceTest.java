@@ -330,4 +330,128 @@ class ChatServiceTest {
 		assertThat(result.get(2).getMessageId()).isEqualTo("msg1");
 	}
 
+	@Test
+	void likeMessage_shouldBroadcastTop3MessagesToTop3Channel() throws Exception {
+		String likeKey = "like:" + sessionId + ":" + messageId;
+
+		when(chatLikeRepository.hasLiked(likeKey, userId)).thenReturn(false);
+		doNothing().when(chatLikeRepository).likeMessage(likeKey, userId);
+		when(chatLikeRepository.getLikeCount(likeKey)).thenReturn(5);
+
+		// ZSetOperations mocking
+		ZSetOperations<String, Object> zSetOps = mock(ZSetOperations.class);
+		when(redisTemplate.opsForZSet()).thenReturn(zSetOps);
+		when(zSetOps.incrementScore("questions:session:" + sessionId, messageId, 1)).thenReturn(5.0);
+
+		// getZSetSortedQuestions 반환값 mocking (8개 파라미터 생성자 사용)
+		List<ChatMessageDto> top3Mock = List.of(
+			new ChatMessageDto(
+				"m1",
+				ChatCategory.QUESTION,
+				"질문1",
+				"u1",
+				"user1",
+				sessionId,
+				LocalDateTime.now(),
+				5
+			),
+			new ChatMessageDto(
+				"m2",
+				ChatCategory.QUESTION,
+				"질문2",
+				"u2",
+				"user2",
+				sessionId,
+				LocalDateTime.now(),
+				4
+			),
+			new ChatMessageDto(
+				"m3",
+				ChatCategory.QUESTION,
+				"질문3",
+				"u3",
+				"user3",
+				sessionId,
+				LocalDateTime.now(),
+				3
+			)
+		);
+
+		// spy로 감싸고 특정 메서드 mocking
+		ChatService spyChatService = spy(chatService);
+		doReturn(top3Mock).when(spyChatService).getZSetSortedQuestions(sessionId, 0, 3);
+
+		// 실제 likeMessage 호출 (spy 객체 사용)
+		spyChatService.likeMessage(userId, sessionId, messageId);
+
+		ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+		verify(redisTemplate).convertAndSend(eq("chat-top3:" + sessionId), captor.capture());
+
+		String json = captor.getValue();
+		assertThat(json).contains("질문1");
+		assertThat(json).contains("질문2");
+		assertThat(json).contains("질문3");
+	}
+
+
+	@Test
+	void unlikeMessage_shouldBroadcastTop3MessagesToTop3Channel() throws Exception {
+		String likeKey = "like:" + sessionId + ":" + messageId;
+
+		when(chatLikeRepository.hasLiked(likeKey, userId)).thenReturn(true);
+		doNothing().when(chatLikeRepository).unlikeMessage(likeKey, userId, sessionId, messageId);
+
+		ZSetOperations<String, Object> zSetOps = mock(ZSetOperations.class);
+		when(redisTemplate.opsForZSet()).thenReturn(zSetOps);
+		// 좋아요 점수 감소 관련 mocking 필요하면 추가
+
+		// getZSetSortedQuestions 반환값 mocking (8개 파라미터 생성자 사용)
+		List<ChatMessageDto> top3Mock = List.of(
+			new ChatMessageDto(
+				"m1",
+				ChatCategory.QUESTION,
+				"질문1",
+				"u1",
+				"user1",
+				sessionId,
+				LocalDateTime.now(),
+				5
+			),
+			new ChatMessageDto(
+				"m2",
+				ChatCategory.QUESTION,
+				"질문2",
+				"u2",
+				"user2",
+				sessionId,
+				LocalDateTime.now(),
+				4
+			),
+			new ChatMessageDto(
+				"m3",
+				ChatCategory.QUESTION,
+				"질문3",
+				"u3",
+				"user3",
+				sessionId,
+				LocalDateTime.now(),
+				3
+			)
+		);
+
+		// spy로 감싸고 특정 메서드 mocking
+		ChatService spyChatService = spy(chatService);
+		doReturn(top3Mock).when(spyChatService).getZSetSortedQuestions(sessionId, 0, 3);
+
+		// 실제 unlikeMessage 호출 (spy 객체 사용)
+		spyChatService.unlikeMessage(userId, sessionId, messageId);
+
+		ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+		verify(redisTemplate).convertAndSend(eq("chat-top3:" + sessionId), captor.capture());
+
+		String json = captor.getValue();
+		assertThat(json).contains("질문1");
+		assertThat(json).contains("질문2");
+		assertThat(json).contains("질문3");
+	}
 }
