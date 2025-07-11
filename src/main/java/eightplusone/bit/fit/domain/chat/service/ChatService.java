@@ -211,69 +211,6 @@ public class ChatService {
 		return chatLikeRepository.hasLiked(likeKey, userId);
 	}
 
-	// 특정 세션의 QUESTION 메시지를 좋아요 기준으로 정렬
-	public List<ChatMessageDto> getSortedQuestionMessages(Long sessionId) {
-		if (!chatRepository.existsBySessionId(String.valueOf(sessionId))) {
-			throw new CustomException(ErrorCode.CHAT_SESSION_NOT_FOUND);
-		}
-
-		List<Object> rawMessages = chatRepository.getRecentMessages(String.valueOf(sessionId));
-		log.info("🔍 Redis에서 가져온 원본 메시지: {}", rawMessages);
-
-		List<ChatMessage> messages = rawMessages.stream()
-			.map(obj -> {
-				if (obj instanceof ChatMessageDto dto) {
-					return new ChatMessage(dto.getMessageId(), sessionId, dto.getUserId(), dto.getCategory(),
-						dto.getMessage(), dto.getTimestamp());
-				} else if (obj instanceof ChatMessage message) {
-					return message;
-				}
-				log.warn("❌ 변환 실패: {}", obj);
-				return null;
-			})
-			.filter(Objects::nonNull)
-			.filter(msg -> msg.getCategory() == ChatCategory.QUESTION)
-			.collect(Collectors.toList());
-
-		log.info("💬 세션 [{}]에서 가져온 QUESTION 메시지 개수: {}", sessionId, messages.size());
-
-		List<ChatMessage> topLikedMessages = messages.stream()
-			.sorted((m1, m2) -> {
-				int likeCount1 = getLikeCount(sessionId, m1.getMessageId());
-				int likeCount2 = getLikeCount(sessionId, m2.getMessageId());
-
-				log.info("💡 정렬 중: {} ({}개) vs {} ({}개)", m1.getMessageId(), likeCount1, m2.getMessageId(), likeCount2);
-
-				return Integer.compare(likeCount2, likeCount1);
-			})
-			.limit(3)
-			.collect(Collectors.toList());
-
-		messages.removeAll(topLikedMessages);
-		topLikedMessages.addAll(messages);
-
-		return topLikedMessages.stream()
-			.map(msg -> {
-				log.info("🔍 메시지 ID: {}, UserID: {}", msg.getMessageId(), msg.getUserId());
-				String userName = userRedisRepository.getUserName(msg.getUserId());
-				int likeCount = getLikeCount(sessionId, msg.getMessageId());
-
-				log.info("🔍 userRedisRepository.getUserName({}) → {}", msg.getUserId(), userName);
-
-				return ChatMessageDto.builder()
-					.messageId(msg.getMessageId())
-					.category(msg.getCategory())
-					.message(msg.getMessage())
-					.name(userName != null ? userName : "알 수 없음")
-					.userId(msg.getUserId())
-					.sessionId(msg.getSessionId())
-					.timestamp(msg.getTimestamp())
-					.likes(likeCount)
-					.build();
-			})
-			.collect(Collectors.toList());
-	}
-
 	public List<ChatMessageDto> getZSetSortedQuestions(Long sessionId, int page, int size) {
 		String zsetKey = "questions:session:" + sessionId;
 		int start = page * size;
