@@ -119,15 +119,4 @@ public class ChatController {
 		return ResponseEntity.ok(result);
 	}
 
-	@Operation(summary = "ZSet 기반 좋아요 정렬 질문 페이징", description = "ZSet으로 좋아요 순으로 정렬된 질문을 페이징하여 반환합니다.")
-	@GetMapping("/questions/zset/{sessionId}")
-	public ResponseEntity<List<ChatMessageDto>> getZSetSortedQuestions(
-		@PathVariable Long sessionId,
-		@RequestParam(defaultValue = "0") int page,
-		@RequestParam(defaultValue = "3") int size
-	) {
-		List<ChatMessageDto> result = chatService.getZSetSortedQuestions(sessionId, page, size);
-		return ResponseEntity.ok(result);
-	}
-
 }
