@@ -171,6 +171,17 @@ public class ChatService {
 		redisTemplate.convertAndSend("chat-likes", redisMessage);
 
 		log.info("좋아요 변경사항 Redis Pub/Sub 전송: {}", redisMessage);
+
+		// TOP3 계산 및 chat-top3 채널 발행
+		List<ChatMessageDto> top3 = getZSetSortedQuestions(sessionId, 0, 3);
+		try {
+			String top3Json = objectMapper.writeValueAsString(top3);
+			String top3Channel = "chat-top3:" + sessionId;
+			redisTemplate.convertAndSend(top3Channel, top3Json);
+			log.info("TOP3 메시지 Redis 발행 완료: {}", top3Json);
+		} catch (JsonProcessingException e) {
+			throw new CustomException(ErrorCode.JSON_SERIALIZATION_FAILED);
+		}
 	}
 
 	// 좋아요 취소
