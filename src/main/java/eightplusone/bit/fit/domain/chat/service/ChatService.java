@@ -192,6 +192,30 @@ public class ChatService {
 			throw new CustomException(ErrorCode.CANNOT_UNLIKE);
 		}
 		chatLikeRepository.unlikeMessage(likeKey, userId, sessionId, messageId);
+
+		// ZSet score 감소
+		String zsetKey = "questions:session:" + sessionId;
+		redisTemplate.opsForZSet().incrementScore(zsetKey, messageId, -1);
+
+		// 좋아요 개수 조회
+		int updatedLikeCount = getLikeCount(sessionId, messageId);
+
+		// 좋아요 개수를 Redis Pub/Sub을 통해 전송
+		String redisMessage = "{\"messageId\": \"" + messageId + "\", \"likes\": " + updatedLikeCount + "}";
+		redisTemplate.convertAndSend("chat-likes", redisMessage);
+
+		log.info("좋아요 변경사항 Redis Pub/Sub 전송: {}", redisMessage);
+
+		// TOP3 계산 및 chat-top3 채널 발행
+		List<ChatMessageDto> top3 = getZSetSortedQuestions(sessionId, 0, 3);
+		try {
+			String top3Json = objectMapper.writeValueAsString(top3);
+			String top3Channel = "chat-top3:" + sessionId;
+			redisTemplate.convertAndSend(top3Channel, top3Json);
+			log.info("TOP3 메시지 Redis 발행 완료: {}", top3Json);
+		} catch (JsonProcessingException e) {
+			throw new CustomException(ErrorCode.JSON_SERIALIZATION_FAILED);
+		}
 	}
 
 	public void likeMessageWithEmail(String email, Long sessionId, String messageId) {
