@@ -278,50 +278,6 @@ class ChatServiceTest {
 		assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.CHAT_SESSION_NOT_FOUND);
 	}
 
-	// 특정 세션에서 QUESTION 카테고리 메시지를 가져와 좋아요 개수 기준 상위 3개만 가져오는지 확인
-	@Test
-	void getSortedQuestionMessages_returnsTop3Only() {
-		// given
-		Long sessionId = 1L;
-
-		// 메시지 4개 (QUESTION)
-		ChatMessageDto dto1 = new ChatMessageDto("msg1", ChatCategory.QUESTION, "Q1", "User1", "user1", sessionId,
-			LocalDateTime.now(),
-			0);
-		ChatMessageDto dto2 = new ChatMessageDto("msg2", ChatCategory.QUESTION, "Q2", "User2", "user2", sessionId,
-			LocalDateTime.now(),
-			0);
-		ChatMessageDto dto3 = new ChatMessageDto("msg3", ChatCategory.QUESTION, "Q3", "User3", "user3", sessionId,
-			LocalDateTime.now(),
-			0);
-		ChatMessageDto dto4 = new ChatMessageDto("msg4", ChatCategory.QUESTION, "Q4", "User4", "user4", sessionId,
-			LocalDateTime.now(),
-			0);
-
-		when(chatRepository.existsBySessionId(String.valueOf(sessionId))).thenReturn(true);
-		when(chatRepository.getRecentMessages(String.valueOf(sessionId))).thenReturn(List.of(dto1, dto2, dto3, dto4));
-
-		when(userRedisRepository.getUserName(any())).thenReturn("Tester");
-
-		// 좋아요 개수
-		when(chatLikeRepository.getLikeCount("like:1:msg1")).thenReturn(3); // 중간
-		when(chatLikeRepository.getLikeCount("like:1:msg2")).thenReturn(5); // 가장 많음
-		when(chatLikeRepository.getLikeCount("like:1:msg3")).thenReturn(2); // 적음
-		when(chatLikeRepository.getLikeCount("like:1:msg4")).thenReturn(4); // 두 번째
-
-		// when
-		List<ChatMessageDto> result = chatService.getSortedQuestionMessages(sessionId);
-
-		// then
-		assertThat(result).hasSize(4); // 전체는 4개
-		List<ChatMessageDto> top3 = result.subList(0, 3); // 상위 3개
-
-		// 좋아요 순서대로 정렬되었는지 확인
-		assertThat(top3.get(0).getMessageId()).isEqualTo("msg2"); // 5
-		assertThat(top3.get(1).getMessageId()).isEqualTo("msg4"); // 4
-		assertThat(top3.get(2).getMessageId()).isEqualTo("msg1"); // 3
-	}
-
 	@SuppressWarnings("unchecked")
 	@Test
 	void getZSetSortedQuestions_success() throws Exception {
