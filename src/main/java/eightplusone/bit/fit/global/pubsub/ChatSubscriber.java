@@ -1,13 +1,14 @@
 package eightplusone.bit.fit.global.pubsub;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eightplusone.bit.fit.domain.chat.dto.ChatMessageDto;
-import eightplusone.bit.fit.domain.user.repository.UserRedisRepository;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 
@@ -16,20 +17,14 @@ import org.springframework.stereotype.Component;
 public class ChatSubscriber implements MessageListener {
 	private final SimpMessagingTemplate messagingTemplate;
 	private final ObjectMapper objectMapper;
-	private final RedisTemplate<String, Object> redisTemplate;
-	private final UserRedisRepository userRedisRepository;
 
-	public ChatSubscriber(SimpMessagingTemplate messagingTemplate, ObjectMapper objectMapper,
-		RedisTemplate<String, Object> redisTemplate,
-		UserRedisRepository userRedisRepository) {
+	public ChatSubscriber(SimpMessagingTemplate messagingTemplate, ObjectMapper objectMapper) {
 		this.messagingTemplate = messagingTemplate;
 		this.objectMapper = objectMapper;
-		this.redisTemplate = redisTemplate;
-		this.userRedisRepository = userRedisRepository;
 	}
 
 	@Override
-	public void onMessage(Message message, byte[] pattern) {
+	public void onMessage(@NonNull Message message, byte[] pattern) {
 		try {
 			String raw = new String(message.getBody(), StandardCharsets.UTF_8);
 			String channel = new String(message.getChannel(), StandardCharsets.UTF_8);
@@ -41,6 +36,15 @@ public class ChatSubscriber implements MessageListener {
 				return;
 			}
 
+			// TOP3 처리
+			if (channel.startsWith("chat-top3:")) {
+				String sessionId = channel.substring("chat-top3:".length());
+				List<ChatMessageDto> top3 = objectMapper.readValue(raw, new TypeReference<List<ChatMessageDto>>() {});
+				messagingTemplate.convertAndSend("/sub/top3/" + sessionId, top3);
+				log.info("✅ TOP3 메시지 WebSocket 전송 완료 (세션 {}): {}", sessionId, top3);
+				return;
+			}
+
 			ChatMessageDto dto = objectMapper.readValue(raw, ChatMessageDto.class);
 
 			if (dto.getMessageId() == null) {
@@ -49,6 +53,7 @@ public class ChatSubscriber implements MessageListener {
 			}
 
 			messagingTemplate.convertAndSend("/sub/chat/" + dto.getSessionId(), dto);
+			log.info("✅ 채팅 메시지 WebSocket 전송 완료: {}", dto);
 		} catch (Exception e) {
 			log.error("Redis 메시지 처리 중 오류", e);
 		}

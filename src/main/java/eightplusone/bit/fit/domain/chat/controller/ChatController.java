@@ -98,14 +98,6 @@ public class ChatController {
 		chatService.unlikeMessageWithEmail(principal.getName(), sessionId, messageId);
 	}
 
-	@Operation(summary = "질문 메시지 정렬", description = "특정 세션의 질문 메시지에서 가장 좋아요를 많이 받은 3개만 반환합니다.")
-	@GetMapping("/questions/{sessionId}")
-	public List<ChatMessageDto> getSortedQuestions(
-		@Parameter(description = "채팅 세션 ID", example = "1234") @PathVariable String sessionId
-	) {
-		return chatService.getSortedQuestionMessages(Long.valueOf(sessionId));
-	}
-
 	@GetMapping("/likes/{sessionId}/{messageId}")
 	public ResponseEntity<Boolean> hasLiked(@PathVariable Long sessionId,
 		@PathVariable String messageId,
@@ -116,17 +108,6 @@ public class ChatController {
 			.getId();
 
 		boolean result = chatService.hasLiked(userId.toString(), sessionId, messageId);
-		return ResponseEntity.ok(result);
-	}
-
-	@Operation(summary = "ZSet 기반 좋아요 정렬 질문 페이징", description = "ZSet으로 좋아요 순으로 정렬된 질문을 페이징하여 반환합니다.")
-	@GetMapping("/questions/zset/{sessionId}")
-	public ResponseEntity<List<ChatMessageDto>> getZSetSortedQuestions(
-		@PathVariable Long sessionId,
-		@RequestParam(defaultValue = "0") int page,
-		@RequestParam(defaultValue = "3") int size
-	) {
-		List<ChatMessageDto> result = chatService.getZSetSortedQuestions(sessionId, page, size);
 		return ResponseEntity.ok(result);
 	}
 

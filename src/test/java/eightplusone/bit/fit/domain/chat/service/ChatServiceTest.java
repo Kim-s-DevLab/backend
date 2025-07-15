@@ -226,6 +226,10 @@ class ChatServiceTest {
 		when(chatLikeRepository.hasLiked(likeKey, userId)).thenReturn(true);
 		doNothing().when(chatLikeRepository).unlikeMessage(likeKey, userId, sessionId, messageId);
 
+		//redisTemplate.opsForZSet() 호출 시 모킹한 ZSetOperations 반환하도록 설정
+		ZSetOperations<String, Object> zSetOps = mock(ZSetOperations.class);
+		when(redisTemplate.opsForZSet()).thenReturn(zSetOps);
+
 		chatService.unlikeMessage(userId, sessionId, messageId);
 
 		verify(chatLikeRepository, times(1)).unlikeMessage(likeKey, userId, sessionId, messageId);
@@ -278,50 +282,6 @@ class ChatServiceTest {
 		assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.CHAT_SESSION_NOT_FOUND);
 	}
 
-	// 특정 세션에서 QUESTION 카테고리 메시지를 가져와 좋아요 개수 기준 상위 3개만 가져오는지 확인
-	@Test
-	void getSortedQuestionMessages_returnsTop3Only() {
-		// given
-		Long sessionId = 1L;
-
-		// 메시지 4개 (QUESTION)
-		ChatMessageDto dto1 = new ChatMessageDto("msg1", ChatCategory.QUESTION, "Q1", "User1", "user1", sessionId,
-			LocalDateTime.now(),
-			0);
-		ChatMessageDto dto2 = new ChatMessageDto("msg2", ChatCategory.QUESTION, "Q2", "User2", "user2", sessionId,
-			LocalDateTime.now(),
-			0);
-		ChatMessageDto dto3 = new ChatMessageDto("msg3", ChatCategory.QUESTION, "Q3", "User3", "user3", sessionId,
-			LocalDateTime.now(),
-			0);
-		ChatMessageDto dto4 = new ChatMessageDto("msg4", ChatCategory.QUESTION, "Q4", "User4", "user4", sessionId,
-			LocalDateTime.now(),
-			0);
-
-		when(chatRepository.existsBySessionId(String.valueOf(sessionId))).thenReturn(true);
-		when(chatRepository.getRecentMessages(String.valueOf(sessionId))).thenReturn(List.of(dto1, dto2, dto3, dto4));
-
-		when(userRedisRepository.getUserName(any())).thenReturn("Tester");
-
-		// 좋아요 개수
-		when(chatLikeRepository.getLikeCount("like:1:msg1")).thenReturn(3); // 중간
-		when(chatLikeRepository.getLikeCount("like:1:msg2")).thenReturn(5); // 가장 많음
-		when(chatLikeRepository.getLikeCount("like:1:msg3")).thenReturn(2); // 적음
-		when(chatLikeRepository.getLikeCount("like:1:msg4")).thenReturn(4); // 두 번째
-
-		// when
-		List<ChatMessageDto> result = chatService.getSortedQuestionMessages(sessionId);
-
-		// then
-		assertThat(result).hasSize(4); // 전체는 4개
-		List<ChatMessageDto> top3 = result.subList(0, 3); // 상위 3개
-
-		// 좋아요 순서대로 정렬되었는지 확인
-		assertThat(top3.get(0).getMessageId()).isEqualTo("msg2"); // 5
-		assertThat(top3.get(1).getMessageId()).isEqualTo("msg4"); // 4
-		assertThat(top3.get(2).getMessageId()).isEqualTo("msg1"); // 3
-	}
-
 	@SuppressWarnings("unchecked")
 	@Test
 	void getZSetSortedQuestions_success() throws Exception {
@@ -370,4 +330,128 @@ class ChatServiceTest {
 		assertThat(result.get(2).getMessageId()).isEqualTo("msg1");
 	}
 
+	@Test
+	void likeMessage_shouldBroadcastTop3MessagesToTop3Channel() throws Exception {
+		String likeKey = "like:" + sessionId + ":" + messageId;
+
+		when(chatLikeRepository.hasLiked(likeKey, userId)).thenReturn(false);
+		doNothing().when(chatLikeRepository).likeMessage(likeKey, userId);
+		when(chatLikeRepository.getLikeCount(likeKey)).thenReturn(5);
+
+		// ZSetOperations mocking
+		ZSetOperations<String, Object> zSetOps = mock(ZSetOperations.class);
+		when(redisTemplate.opsForZSet()).thenReturn(zSetOps);
+		when(zSetOps.incrementScore("questions:session:" + sessionId, messageId, 1)).thenReturn(5.0);
+
+		// getZSetSortedQuestions 반환값 mocking (8개 파라미터 생성자 사용)
+		List<ChatMessageDto> top3Mock = List.of(
+			new ChatMessageDto(
+				"m1",
+				ChatCategory.QUESTION,
+				"질문1",
+				"u1",
+				"user1",
+				sessionId,
+				LocalDateTime.now(),
+				5
+			),
+			new ChatMessageDto(
+				"m2",
+				ChatCategory.QUESTION,
+				"질문2",
+				"u2",
+				"user2",
+				sessionId,
+				LocalDateTime.now(),
+				4
+			),
+			new ChatMessageDto(
+				"m3",
+				ChatCategory.QUESTION,
+				"질문3",
+				"u3",
+				"user3",
+				sessionId,
+				LocalDateTime.now(),
+				3
+			)
+		);
+
+		// spy로 감싸고 특정 메서드 mocking
+		ChatService spyChatService = spy(chatService);
+		doReturn(top3Mock).when(spyChatService).getZSetSortedQuestions(sessionId, 0, 3);
+
+		// 실제 likeMessage 호출 (spy 객체 사용)
+		spyChatService.likeMessage(userId, sessionId, messageId);
+
+		ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+		verify(redisTemplate).convertAndSend(eq("chat-top3:" + sessionId), captor.capture());
+
+		String json = captor.getValue();
+		assertThat(json).contains("질문1");
+		assertThat(json).contains("질문2");
+		assertThat(json).contains("질문3");
+	}
+
+
+	@Test
+	void unlikeMessage_shouldBroadcastTop3MessagesToTop3Channel() throws Exception {
+		String likeKey = "like:" + sessionId + ":" + messageId;
+
+		when(chatLikeRepository.hasLiked(likeKey, userId)).thenReturn(true);
+		doNothing().when(chatLikeRepository).unlikeMessage(likeKey, userId, sessionId, messageId);
+
+		ZSetOperations<String, Object> zSetOps = mock(ZSetOperations.class);
+		when(redisTemplate.opsForZSet()).thenReturn(zSetOps);
+		// 좋아요 점수 감소 관련 mocking 필요하면 추가
+
+		// getZSetSortedQuestions 반환값 mocking (8개 파라미터 생성자 사용)
+		List<ChatMessageDto> top3Mock = List.of(
+			new ChatMessageDto(
+				"m1",
+				ChatCategory.QUESTION,
+				"질문1",
+				"u1",
+				"user1",
+				sessionId,
+				LocalDateTime.now(),
+				5
+			),
+			new ChatMessageDto(
+				"m2",
+				ChatCategory.QUESTION,
+				"질문2",
+				"u2",
+				"user2",
+				sessionId,
+				LocalDateTime.now(),
+				4
+			),
+			new ChatMessageDto(
+				"m3",
+				ChatCategory.QUESTION,
+				"질문3",
+				"u3",
+				"user3",
+				sessionId,
+				LocalDateTime.now(),
+				3
+			)
+		);
+
+		// spy로 감싸고 특정 메서드 mocking
+		ChatService spyChatService = spy(chatService);
+		doReturn(top3Mock).when(spyChatService).getZSetSortedQuestions(sessionId, 0, 3);
+
+		// 실제 unlikeMessage 호출 (spy 객체 사용)
+		spyChatService.unlikeMessage(userId, sessionId, messageId);
+
+		ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+		verify(redisTemplate).convertAndSend(eq("chat-top3:" + sessionId), captor.capture());
+
+		String json = captor.getValue();
+		assertThat(json).contains("질문1");
+		assertThat(json).contains("질문2");
+		assertThat(json).contains("질문3");
+	}
 }
