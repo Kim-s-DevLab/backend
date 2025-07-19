@@ -84,6 +84,8 @@ public class SecurityConfig {
 			.httpBasic(AbstractHttpConfigurer::disable)
 			.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 			.authorizeHttpRequests(auth -> auth
+				.requestMatchers("/actuator/prometheus").permitAll()
+				.requestMatchers("/actuator/**").permitAll()
 				.requestMatchers(PUBLIC_GET.getMethod(), PUBLIC_GET.getPaths())
 				.permitAll()
 				.requestMatchers(PUBLIC_POST.getMethod(), PUBLIC_POST.getPaths())
