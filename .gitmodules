@@ -1,1 +1,4 @@
 
+[submodule "be_sub_module_yml"]
+	path = be_sub_module_yml
+	url = https://github.com/Kim-s-DevLab/devlab_sub_module_yml.git
