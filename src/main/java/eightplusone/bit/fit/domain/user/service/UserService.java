@@ -85,29 +85,29 @@ public class UserService {
 		));
 	}
 
-	@Transactional
-	public void updateProfileImage(String email, MultipartFile requestImage) {
-		User user = userRepository.findLoginUserByEmail(email);
-		String userImageUrl = user.getImageUrl();
-		if (userImageUrl != null) {
-			imageService.deleteFromS3(userImageUrl);
-		}
-		S3ImageDto s3ImageDto = imageService.uploadToS3(requestImage);
-		user.updateProfileImage(
-			s3ImageDto.getName(), s3ImageDto.getUrl()
-		);
-	}
-
-	@Transactional
-	public void deleteProfileImage(String email) {
-		User user = userRepository.findLoginUserByEmail(email);
-		String userImageUrl = user.getImageUrl();
-		if (userImageUrl == null) {
-			throw new CustomException(ErrorCode.RESOURCE_NOT_FOUND);
-		}
-		imageService.deleteFromS3(userImageUrl);
-		user.deleteProfileImage();
-	}
+//	@Transactional
+//	public void updateProfileImage(String email, MultipartFile requestImage) {
+//		User user = userRepository.findLoginUserByEmail(email);
+//		String userImageUrl = user.getImageUrl();
+//		if (userImageUrl != null) {
+//			imageService.deleteFromS3(userImageUrl);
+//		}
+//		S3ImageDto s3ImageDto = imageService.uploadToS3(requestImage);
+//		user.updateProfileImage(
+//			s3ImageDto.getName(), s3ImageDto.getUrl()
+//		);
+//	}
+//
+//	@Transactional
+//	public void deleteProfileImage(String email) {
+//		User user = userRepository.findLoginUserByEmail(email);
+//		String userImageUrl = user.getImageUrl();
+//		if (userImageUrl == null) {
+//			throw new CustomException(ErrorCode.RESOURCE_NOT_FOUND);
+//		}
+//		imageService.deleteFromS3(userImageUrl);
+//		user.deleteProfileImage();
+//	}
 
 	public String findProfileImage(String email) {
 		User user = userRepository.findLoginUserByEmail(email);
