@@ -1,10 +1,9 @@
-version: '3.8'
 
 services:
   app:
     build: .
     container_name: fit-app
-    #    restart: always
+    restart: always
     ports:
       - "8080:8080"
     depends_on:
@@ -16,6 +15,9 @@ services:
         condition: service_started
     environment:
       SPRING_PROFILES_ACTIVE: local
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/fit
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_KURENTO_WS_URL: ws://kurento:8888/kurento
     networks:
       - fit-network
 
@@ -62,9 +64,39 @@ services:
     networks:
       - fit-network
 
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command: --config.file=/etc/prometheus/prometheus.yml --web.enable-remote-write-receiver
+    networks:
+      - fit-network
+    depends_on:
+      - app
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"  # 로컬 접속은 http://localhost:3000
+    depends_on:
+      - prometheus
+    volumes:
+      - grafana-storage:/var/lib/grafana
+    networks:
+      - fit-network
+
+
 volumes:
   mysql_data:
   redis_data:
+  prometheus_data:
+  grafana-storage:
 
 networks:
   fit-network:

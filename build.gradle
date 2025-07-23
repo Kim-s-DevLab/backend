@@ -60,7 +60,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'io.micrometer:micrometer-registry-prometheus'
     // aws s3
-    implementation 'io.awspring.cloud:spring-cloud-aws-starter-s3:3.3.0'
+//    implementation 'io.awspring.cloud:spring-cloud-aws-starter-s3:3.3.0'
 }
 
 tasks.named('test') {
@@ -68,18 +68,18 @@ tasks.named('test') {
 }
 
 tasks.register("copyPrivate", Copy) {
-    from("$projectDir/be_sub_module_yml")  // 서브모듈 경로
+    from("$projectDir/devlab_sub_module_yml")  // 서브모듈 경로
     include("*.yml")                    // 복사할 파일 패턴 (*.yml)
     into("$projectDir/src/main/resources")  // 복사 대상 경로
 }
-
-tasks.named("processResources") {
-    dependsOn("copyPrivate")
-}
-
-tasks.named("build") {
-    dependsOn("copyPrivate")
-}
+//
+//tasks.named("processResources") {
+//    dependsOn("copyPrivate")
+//}
+//
+//tasks.named("build") {
+//    dependsOn("copyPrivate")
+//}
 
 def generated = layout.buildDirectory.dir("generated/querydsl").get().asFile
 
